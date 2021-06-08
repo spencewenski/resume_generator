@@ -1,29 +1,35 @@
 mod parser;
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct Resume {
     pub personal_info: PersonalInfo,
     pub objective: Objective,
     pub professional_experience: Vec<ProfessionalExperience>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub education: Option<Vec<Education>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub other_experience: Option<OtherExperience>,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct PersonalInfo {
     pub name: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub email: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub phone: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub website: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub other: Option<Vec<String>>,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct Objective {
     pub objective: String,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct ProfessionalExperience {
     pub organization: String,
     pub location: String,
@@ -33,16 +39,17 @@ pub struct ProfessionalExperience {
     pub experience: Vec<String>,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct Education {
     pub school: String,
     pub location: String,
     pub start: String,
     pub end: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub extras: Option<Vec<String>>,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct OtherExperience {
     pub experience: Vec<String>,
 }
