@@ -1,0 +1,55 @@
+[personal_info]
+name = "Foo Bar"
+email = "foo@example.com"
+phone = "1-555-555-5555"
+website = "example.com"
+other = [
+    "github.com/example",
+    "gitlab.com/example",
+    "linkedin.com/example"
+]
+
+[objective]
+objective = "objective"
+
+[[professional_experience]]
+organization = "organizationA"
+location = "locationA"
+position = "positionA"
+start = "startA"
+end = "endA"
+experience = [
+    "FooA",
+    "BarA",
+    "BazA",
+]
+
+[[professional_experience]]
+organization = "organizationB"
+location = "locationB"
+position = "positionB"
+start = "startB"
+end = "endB"
+experience = [
+    "FooB",
+    "BarB",
+    "BazB",
+]
+
+[[education]]
+school = "school"
+location = "location"
+start = "start"
+end = "end"
+extras = [
+    "Foo",
+    "Bar",
+    "Baz",
+]
+
+[other_experience]
+experience = [
+    "Foo",
+    "Bar",
+    "Baz",
+]
