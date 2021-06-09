@@ -3,7 +3,7 @@ use crate::data::Resume;
 
 pub struct JsonRenderer;
 
-impl Renderer for JsonRenderer {
+impl Renderer<Resume> for JsonRenderer {
     fn render(resume: Resume) -> Result<String, String> {
         serde_json::to_string(&resume).map_err(|e| {
             format!("An error occurred while trying to serialize resume as JSON: {}", e)
