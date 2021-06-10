@@ -1,4 +1,12 @@
+use crate::data::parser::{TomlParser, Parser};
+
 mod parser;
+
+impl Resume {
+    pub fn read_from_config_file(file_name: &str) -> Result<Resume, String> {
+        TomlParser::parse(file_name)
+    }
+}
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Resume {
@@ -14,12 +22,9 @@ pub struct Resume {
 #[derive(Debug, Serialize, Deserialize)]
 pub struct PersonalInfo {
     pub name: String,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub email: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub phone: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub website: Option<String>,
+    pub email: String,
+    pub phone: String,
+    pub github: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub other: Option<Vec<String>>,
 }
@@ -62,16 +67,16 @@ mod tests {
     fn test_personal_info() {
         let personal_info = PersonalInfo {
             name: String::from("Foo Bar"),
-            email: Option::Some(String::from("foo@example.com")),
-            phone: Option::Some(String::from("1-555-555-5555")),
-            website: Option::Some(String::from("www.example.com")),
+            email: String::from("foo@example.com"),
+            phone: String::from("1-555-555-5555"),
+            github: String::from("github.com/foo"),
             other: Option::Some(vec![ String::from("Foo"), String::from("Bar") ]),
         };
 
         assert_eq!(personal_info.name, String::from("Foo Bar"));
-        assert_eq!(personal_info.email, Option::Some(String::from("foo@example.com")));
-        assert_eq!(personal_info.phone, Option::Some(String::from("1-555-555-5555")));
-        assert_eq!(personal_info.website, Option::Some(String::from("www.example.com")));
+        assert_eq!(personal_info.email, String::from("foo@example.com"));
+        assert_eq!(personal_info.phone, String::from("1-555-555-5555"));
+        assert_eq!(personal_info.github, String::from("github.com/foo"));
         assert_eq!(personal_info.other, Option::Some(vec![String::from("Foo"), String::from("Bar")]));
     }
 }

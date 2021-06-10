@@ -1,8 +1,8 @@
 [personal_info]
 name = "Foo Bar"
 email = "foo@example.com"
-phone = "1-555-555-5555"
-website = "example.com"
+phone = "555-555-5555"
+github = "github.com/foo"
 other = [
     "github.com/example",
     "gitlab.com/example",

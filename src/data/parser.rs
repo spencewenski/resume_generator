@@ -1,5 +1,5 @@
-use std::fs;
 use crate::data::Resume;
+use crate::util::{string_from_file, toml_from_string};
 
 pub trait Parser {
     fn parse(file_name: &str) -> Result<Resume, String>;
@@ -9,13 +9,8 @@ pub struct TomlParser;
 
 impl Parser for TomlParser {
     fn parse(file_name: &str) -> Result<Resume, String> {
-        let input = fs::read_to_string(file_name).map_err(|e| {
-            format!("An error occurred while trying to open file [{}]: {}", file_name, e)
-        })?;
-
-        toml::from_str::<Resume>(&*input).map_err(|e| {
-            format!("An error occurred while parsing resume toml: {}", e)
-        })
+        let input = string_from_file(file_name)?;
+        toml_from_string(&*input)
     }
 }
 
@@ -28,9 +23,9 @@ mod test {
         let resume = TomlParser::parse("tst/test_resume.toml").unwrap();
 
         assert_eq!(resume.personal_info.name, "Foo Bar");
-        assert_eq!(resume.personal_info.email, Option::Some(String::from("foo@example.com")));
-        assert_eq!(resume.personal_info.phone, Option::Some(String::from("1-555-555-5555")));
-        assert_eq!(resume.personal_info.website, Option::Some(String::from("example.com")));
+        assert_eq!(resume.personal_info.email, String::from("foo@example.com"));
+        assert_eq!(resume.personal_info.phone, String::from("555-555-5555"));
+        assert_eq!(resume.personal_info.github, String::from("github.com/foo"));
         assert_eq!(resume.personal_info.other, Option::Some(vec![String::from("github.com/example"),
                                                                  String::from("gitlab.com/example"),
                                                                  String::from("linkedin.com/example")]));
