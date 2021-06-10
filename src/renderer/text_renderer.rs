@@ -1,5 +1,5 @@
 use crate::renderer::Renderer;
-use crate::data::{Resume, PersonalInfo, Objective, ProfessionalExperience};
+use crate::data::{Resume, PersonalInfo, Objective, ProfessionalExperience, OtherExperience, Technologies, Education};
 use crate::config::Config;
 use crate::util::{get_phone_number, footer_text};
 
@@ -20,6 +20,15 @@ impl Renderer<Resume> for TextRenderer {
         let mut text = self.render_to_string(&element.personal_info, &config)?;
         text = format!("{}{}", text, self.render_to_string(&element.objective, &config)?);
         text = format!("{}{}", text, self.render_to_string(&element.professional_experience, config)?);
+        if let Some(x) = &element.other_experience {
+            text = format!("{}{}", text, self.render_to_string(x, config)?);
+        }
+        if let Some(x) = &element.technologies {
+            text = format!("{}{}", text, self.render_to_string(x, config)?);
+        }
+        if let Some(x) = &element.education {
+            text = format!("{}{}", text, self.render_to_string(x, config)?);
+        }
         text = format!("{}{footer:^width$}\n", text,
                        footer=footer_text(),
                        width=config.format_config.text_config.width);
@@ -82,23 +91,68 @@ impl Renderer<Vec<ProfessionalExperience>> for TextRenderer {
 
 impl Renderer<ProfessionalExperience> for TextRenderer {
     fn render_to_string(self: &Self, element: &ProfessionalExperience, config: &Config) -> Result<String, String> {
-        let mut text = format!("{organization}{location:>width$}\n",
-                               organization=element.organization,
-                               location=element.location,
-                               width=config.format_config.text_config.width - element.organization.len());
+        let mut text = right_and_left_aligned(&element.organization,
+                                              &element.location,
+                                              config.format_config.text_config.width);
         let time = format!("{} - {}", element.start, element.end);
-        text = format!("{prev}{position}{time:>width$}\n",
-                       prev=text,
-                       position=element.position,
-                       time=time,
-                       width=config.format_config.text_config.width - element.position.len());
+        text = format!("{}\n{}\n", text, right_and_left_aligned(&element.position,
+                                                                &time,
+                                                                config.format_config.text_config.width));
 
         for e in element.experience.iter() {
+            // todo: handle long lines?
             text = format!("{prev}- {experience}\n", prev=text, experience=e);
         }
 
         Ok(text)
     }
+}
+
+impl Renderer<OtherExperience> for TextRenderer {
+    fn render_to_string(self: &Self, element: &OtherExperience, config: &Config) -> Result<String, String> {
+        let header = centered_string("PROJECTS", config.format_config.text_config.width);
+        // todo: handle long lines?
+        let projects = element.projects.iter().map(|s| -> String {
+            format!("- {}", s)
+        })
+            .collect::<Vec<String>>()
+            .join("\n");
+        Ok(format!("{}\n{}\n\n", header, projects))
+    }
+}
+
+impl Renderer<Technologies> for TextRenderer {
+    fn render_to_string(self: &Self, element: &Technologies, config: &Config) -> Result<String, String> {
+        let header = centered_string("TECHNOLOGIES", config.format_config.text_config.width);
+        let mut technologies = element.technologies.join(", ");
+        technologies = centered_string(&technologies, config.format_config.text_config.width);
+        Ok(format!("{}\n{}\n\n", header, technologies))
+    }
+}
+
+impl Renderer<Education> for TextRenderer {
+    fn render_to_string(self: &Self, element: &Education, config: &Config) -> Result<String, String> {
+        let mut text = centered_string("UNIVERSITY", config.format_config.text_config.width);
+        text = format!("{}\n{}", text,  right_and_left_aligned(&element.school,
+                                                               &element.location,
+                                                               config.format_config.text_config.width));
+        text = format!("{}\n{}", text,  right_and_left_aligned(&element.major,
+                                                               &element.graduation,
+                                                               config.format_config.text_config.width));
+        text = format!("{}\n\n", text);
+        Ok(text)
+    }
+}
+
+fn centered_string(s: &str, width: usize) -> String {
+    format!("{s:^width$}", s=s, width=width)
+}
+
+fn right_and_left_aligned(l: &str, r: &str, width: usize) -> String {
+    format!("{left}{right:>width$}",
+            left=l,
+            right=r,
+            width=width - l.len())
 }
 
 fn split_string_across_lines(s: &str, width: usize) -> String {

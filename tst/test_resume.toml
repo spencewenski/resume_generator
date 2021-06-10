@@ -36,19 +36,26 @@ experience = [
     "BazB",
 ]
 
-[[education]]
+[education]
 school = "school"
 location = "location"
-start = "start"
-end = "end"
+major = "major"
+graduation = "graduation"
 extras = [
     "Foo",
     "Bar",
     "Baz",
 ]
 
+[technologies]
+technologies = [
+    "Foo",
+    "Bar",
+    "Baz",
+]
+
 [other_experience]
-experience = [
+projects = [
     "Foo",
     "Bar",
     "Baz",

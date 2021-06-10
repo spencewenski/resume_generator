@@ -53,19 +53,18 @@ mod test {
 
         assert!(resume.education.is_some());
         let education = resume.education.unwrap();
-        assert_eq!(education.len(), 1);
-        assert_eq!(education[0].school, String::from("school"));
-        assert_eq!(education[0].location, String::from("location"));
-        assert_eq!(education[0].start, String::from("start"));
-        assert_eq!(education[0].end, String::from("end"));
-        assert_eq!(education[0].extras, Option::Some(vec![String::from("Foo"),
-                                                          String::from("Bar"),
-                                                          String::from("Baz")]));
+        assert_eq!(education.school, String::from("school"));
+        assert_eq!(education.location, String::from("location"));
+        assert_eq!(education.major, String::from("major"));
+        assert_eq!(education.graduation, String::from("graduation"));
+        assert_eq!(education.extras, Option::Some(vec![String::from("Foo"),
+                                                       String::from("Bar"),
+                                                       String::from("Baz")]));
 
         assert!(resume.other_experience.is_some());
         let other_experience = resume.other_experience.unwrap();
-        assert_eq!(other_experience.experience, vec![String::from("Foo"),
-                                                          String::from("Bar"),
-                                                          String::from("Baz")]);
+        assert_eq!(other_experience.projects, vec![String::from("Foo"),
+                                                   String::from("Bar"),
+                                                   String::from("Baz")]);
     }
 }

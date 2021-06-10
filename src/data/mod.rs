@@ -14,9 +14,11 @@ pub struct Resume {
     pub objective: Objective,
     pub professional_experience: Vec<ProfessionalExperience>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub education: Option<Vec<Education>>,
+    pub education: Option<Education>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub other_experience: Option<OtherExperience>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub technologies: Option<Technologies>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -48,15 +50,20 @@ pub struct ProfessionalExperience {
 pub struct Education {
     pub school: String,
     pub location: String,
-    pub start: String,
-    pub end: String,
+    pub major: String,
+    pub graduation: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub extras: Option<Vec<String>>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct OtherExperience {
-    pub experience: Vec<String>,
+    pub projects: Vec<String>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct Technologies {
+    pub technologies: Vec<String>,
 }
 
 #[cfg(test)]
