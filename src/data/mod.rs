@@ -8,7 +8,7 @@ impl Resume {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Default)]
 pub struct Resume {
     pub personal_info: PersonalInfo,
     pub objective: Objective,
@@ -21,7 +21,7 @@ pub struct Resume {
     pub technologies: Option<Technologies>,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Default)]
 pub struct PersonalInfo {
     pub name: String,
     pub email: String,
@@ -31,12 +31,12 @@ pub struct PersonalInfo {
     pub other: Option<Vec<String>>,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Default)]
 pub struct Objective {
     pub objective: String,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Default)]
 pub struct ProfessionalExperience {
     pub organization: String,
     pub location: String,
@@ -46,7 +46,7 @@ pub struct ProfessionalExperience {
     pub experience: Vec<String>,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Default)]
 pub struct Education {
     pub school: String,
     pub location: String,
@@ -56,12 +56,12 @@ pub struct Education {
     pub extras: Option<Vec<String>>,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Default)]
 pub struct OtherExperience {
     pub projects: Vec<String>,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Default)]
 pub struct Technologies {
     pub technologies: Vec<String>,
 }

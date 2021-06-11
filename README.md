@@ -1,5 +1,21 @@
 # Resume builder
 
+## Install
+
+```bash
+# Rust
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+# LaTeX
+sudo pacman -Sy texlive-core
+# Get the code
+git clone --depth 1 https://github.com/spencewenski/resume_generator.git
+```
+
+## Running
+```bash
+cargo run -- cargo run -- -i $HOME/Desktop/resume/resume.toml -o spencer_ferris -d $HOME/Desktop/resume/output
+```
+
 ## Design
 - write resume as json (or toml?)
 - provide resume data as a list of items to render

@@ -1,6 +1,6 @@
 use argparse::{ArgumentParser, StoreOption, StoreTrue, Store};
 
-#[derive(Debug, Default)]
+#[derive(Debug, Serialize, Deserialize, Default)]
 pub struct Arguments {
     pub resume_input: String,
     pub output_name: String,

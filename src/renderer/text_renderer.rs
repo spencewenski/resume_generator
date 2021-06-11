@@ -1,7 +1,8 @@
 use crate::renderer::Renderer;
 use crate::data::{Resume, PersonalInfo, Objective, ProfessionalExperience, OtherExperience, Technologies, Education};
 use crate::config::Config;
-use crate::util::{get_phone_number, footer_text};
+use crate::util::{get_phone_number, footer_text, write_string_to_file, time_range_string};
+use std::path::PathBuf;
 
 pub struct TextRenderer;
 
@@ -11,23 +12,30 @@ impl TextRenderer {
     }
 }
 
-impl Renderer<Resume> for TextRenderer {
-    fn file_extension(self: &Self) -> String {
-        String::from("txt")
-    }
+impl Renderer<Resume, PathBuf> for TextRenderer {
+    fn render(self: &Self, element: &Resume, config: &Config) -> Result<PathBuf, String> {
+        let s: String = self.render(element, config)?;
 
-    fn render_to_string(self: &Self, element: &Resume, config: &Config) -> Result<String, String> {
-        let mut text = self.render_to_string(&element.personal_info, &config)?;
-        text = format!("{}{}", text, self.render_to_string(&element.objective, &config)?);
-        text = format!("{}{}", text, self.render_to_string(&element.professional_experience, config)?);
+        write_string_to_file(&s,
+                             config.args.output_dir.as_ref(),
+                             &config.args.output_name,
+                             Some(String::from("txt")).as_ref())
+    }
+}
+
+impl Renderer<Resume, String> for TextRenderer {
+    fn render(self: &Self, element: &Resume, config: &Config) -> Result<String, String> {
+        let mut text = self.render(&element.personal_info, &config)?;
+        text = format!("{}{}", text, self.render(&element.objective, &config)?);
+        text = format!("{}{}", text, self.render(&element.professional_experience, config)?);
         if let Some(x) = &element.other_experience {
-            text = format!("{}{}", text, self.render_to_string(x, config)?);
+            text = format!("{}{}", text, self.render(x, config)?);
         }
         if let Some(x) = &element.technologies {
-            text = format!("{}{}", text, self.render_to_string(x, config)?);
+            text = format!("{}{}", text, self.render(x, config)?);
         }
         if let Some(x) = &element.education {
-            text = format!("{}{}", text, self.render_to_string(x, config)?);
+            text = format!("{}{}", text, self.render(x, config)?);
         }
         text = format!("{}{footer:^width$}\n", text,
                        footer=footer_text(),
@@ -36,8 +44,8 @@ impl Renderer<Resume> for TextRenderer {
     }
 }
 
-impl Renderer<PersonalInfo> for TextRenderer {
-    fn render_to_string(self: &Self, element: &PersonalInfo, config: &Config) -> Result<String, String> {
+impl Renderer<PersonalInfo, String> for TextRenderer {
+    fn render(self: &Self, element: &PersonalInfo, config: &Config) -> Result<String, String> {
         let mut text = format!("{a:^width$}\n\n", width=config.format_config.text_config.width, a=element.name);
 
         let space_taken = element.github.len() + element.email.len();
@@ -67,36 +75,35 @@ impl Renderer<PersonalInfo> for TextRenderer {
     }
 }
 
-impl Renderer<Objective> for TextRenderer {
-    fn render_to_string(self: &Self, element: &Objective, config: &Config) -> Result<String, String> {
+impl Renderer<Objective, String> for TextRenderer {
+    fn render(self: &Self, element: &Objective, config: &Config) -> Result<String, String> {
         let mut text = split_string_across_lines(&element.objective, config.format_config.text_config.width);
         text = format!("{}\n\n", text);
         Ok(text)
     }
 }
 
-impl Renderer<Vec<ProfessionalExperience>> for TextRenderer {
-    fn render_to_string(self: &Self, element: &Vec<ProfessionalExperience>, config: &Config) -> Result<String, String> {
+impl Renderer<Vec<ProfessionalExperience>, String> for TextRenderer {
+    fn render(self: &Self, element: &Vec<ProfessionalExperience>, config: &Config) -> Result<String, String> {
         let mut text = format!("{header:^width$}\n",
                                header="EXPERIENCE",
                                width=config.format_config.text_config.width);
 
         for experience in element {
-            text = format!("{}{}\n", text, self.render_to_string(experience, &config)?);
+            text = format!("{}{}\n", text, self.render(experience, &config)?);
         }
 
         Ok(text)
     }
 }
 
-impl Renderer<ProfessionalExperience> for TextRenderer {
-    fn render_to_string(self: &Self, element: &ProfessionalExperience, config: &Config) -> Result<String, String> {
+impl Renderer<ProfessionalExperience, String> for TextRenderer {
+    fn render(self: &Self, element: &ProfessionalExperience, config: &Config) -> Result<String, String> {
         let mut text = right_and_left_aligned(&element.organization,
                                               &element.location,
                                               config.format_config.text_config.width);
-        let time = format!("{} - {}", element.start, element.end);
         text = format!("{}\n{}\n", text, right_and_left_aligned(&element.position,
-                                                                &time,
+                                                                &time_range_string(&element.start, &element.end),
                                                                 config.format_config.text_config.width));
 
         for e in element.experience.iter() {
@@ -108,8 +115,8 @@ impl Renderer<ProfessionalExperience> for TextRenderer {
     }
 }
 
-impl Renderer<OtherExperience> for TextRenderer {
-    fn render_to_string(self: &Self, element: &OtherExperience, config: &Config) -> Result<String, String> {
+impl Renderer<OtherExperience, String> for TextRenderer {
+    fn render(self: &Self, element: &OtherExperience, config: &Config) -> Result<String, String> {
         let header = centered_string("PROJECTS", config.format_config.text_config.width);
         // todo: handle long lines?
         let projects = element.projects.iter().map(|s| -> String {
@@ -121,8 +128,8 @@ impl Renderer<OtherExperience> for TextRenderer {
     }
 }
 
-impl Renderer<Technologies> for TextRenderer {
-    fn render_to_string(self: &Self, element: &Technologies, config: &Config) -> Result<String, String> {
+impl Renderer<Technologies, String> for TextRenderer {
+    fn render(self: &Self, element: &Technologies, config: &Config) -> Result<String, String> {
         let header = centered_string("TECHNOLOGIES", config.format_config.text_config.width);
         let mut technologies = element.technologies.join(", ");
         technologies = centered_string(&technologies, config.format_config.text_config.width);
@@ -130,8 +137,8 @@ impl Renderer<Technologies> for TextRenderer {
     }
 }
 
-impl Renderer<Education> for TextRenderer {
-    fn render_to_string(self: &Self, element: &Education, config: &Config) -> Result<String, String> {
+impl Renderer<Education, String> for TextRenderer {
+    fn render(self: &Self, element: &Education, config: &Config) -> Result<String, String> {
         let mut text = centered_string("UNIVERSITY", config.format_config.text_config.width);
         text = format!("{}\n{}", text,  right_and_left_aligned(&element.school,
                                                                &element.location,
@@ -183,7 +190,7 @@ fn split_string_across_lines(s: &str, width: usize) -> String {
 
 #[cfg(test)]
 mod test {
-    use crate::data::{PersonalInfo};
+    use crate::data::{PersonalInfo, Resume};
     use crate::renderer::text_renderer::{TextRenderer, split_string_across_lines};
     use crate::renderer::Renderer;
     use crate::config::format_config::{TextConfig, FormatConfig};
@@ -201,15 +208,16 @@ mod test {
             email: String::from("foo@bar.com"),
             phone: String::from("1-555-555-5555"),
             github: String::from("github.com/foo"),
-            other: Option::None,
+            ..Default::default()
         };
         let config = Config {
             format_config: FormatConfig {
                 text_config: TextConfig { width: 50 },
+                ..Default::default()
             },
-            args: Default::default(),
+            ..Default::default()
         };
-        let rendered = TextRenderer::new().render_to_string(&personal_info, &config).unwrap();
+        let rendered: String = TextRenderer::new().render(&personal_info, &config).unwrap();
 
         // assert_eq!(rendered, "                                              Foo Bar                                               \n");
     }

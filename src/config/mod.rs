@@ -5,6 +5,7 @@ use crate::util::{string_from_file, toml_from_string};
 pub mod arguments;
 pub mod format_config;
 
+#[derive(Debug, Serialize, Deserialize, Default)]
 pub struct Config {
     pub format_config: FormatConfig,
     pub args: Arguments,
