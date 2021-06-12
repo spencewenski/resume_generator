@@ -119,7 +119,7 @@ impl Renderer<PersonalInfo, Document> for PdfRenderer {
         // todo: display something else instead of phone number?
         doc.push(Element::UserDefined(format!("{} \\hfill {} \\hfill {}",
                                               element.github,
-                                              get_phone_number(&element.phone, config).unwrap_or_default(),
+                                              get_phone_number(element.phone.as_ref(), config).unwrap_or_default(),
                                               element.email)));
         doc.push(Element::UserDefined(String::from("\\rule{\\textwidth}{0.4pt}")));
 

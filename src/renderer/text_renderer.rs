@@ -54,7 +54,7 @@ impl Renderer<PersonalInfo, String> for TextRenderer {
         }
 
         let middle_space = config.format_config.text_config.width - space_taken;
-        let phone_number = get_phone_number(&element.phone, config);
+        let phone_number = get_phone_number(element.phone.as_ref(), config);
         let middle_space_needed = if let Some(p) = &phone_number {
             p.len() + 2
         } else {
@@ -206,7 +206,7 @@ mod test {
         let personal_info = PersonalInfo {
             name: String::from("Foo Bar"),
             email: String::from("foo@bar.com"),
-            phone: String::from("1-555-555-5555"),
+            phone: Some(String::from("1-555-555-5555")),
             github: String::from("github.com/foo"),
             ..Default::default()
         };

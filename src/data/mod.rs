@@ -25,7 +25,8 @@ pub struct Resume {
 pub struct PersonalInfo {
     pub name: String,
     pub email: String,
-    pub phone: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub phone: Option<String>,
     pub github: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub other: Option<Vec<String>>,
@@ -75,15 +76,15 @@ mod tests {
         let personal_info = PersonalInfo {
             name: String::from("Foo Bar"),
             email: String::from("foo@example.com"),
-            phone: String::from("1-555-555-5555"),
+            phone: Some(String::from("1-555-555-5555")),
             github: String::from("github.com/foo"),
-            other: Option::Some(vec![ String::from("Foo"), String::from("Bar") ]),
+            other: Some(vec![ String::from("Foo"), String::from("Bar") ]),
         };
 
         assert_eq!(personal_info.name, String::from("Foo Bar"));
         assert_eq!(personal_info.email, String::from("foo@example.com"));
-        assert_eq!(personal_info.phone, String::from("1-555-555-5555"));
+        assert_eq!(personal_info.phone, Some(String::from("1-555-555-5555")));
         assert_eq!(personal_info.github, String::from("github.com/foo"));
-        assert_eq!(personal_info.other, Option::Some(vec![String::from("Foo"), String::from("Bar")]));
+        assert_eq!(personal_info.other, Some(vec![String::from("Foo"), String::from("Bar")]));
     }
 }

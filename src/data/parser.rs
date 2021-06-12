@@ -24,9 +24,9 @@ mod test {
 
         assert_eq!(resume.personal_info.name, "Foo Bar");
         assert_eq!(resume.personal_info.email, String::from("foo@example.com"));
-        assert_eq!(resume.personal_info.phone, String::from("555-555-5555"));
+        assert_eq!(resume.personal_info.phone, Some(String::from("555-555-5555")));
         assert_eq!(resume.personal_info.github, String::from("github.com/foo"));
-        assert_eq!(resume.personal_info.other, Option::Some(vec![String::from("github.com/example"),
+        assert_eq!(resume.personal_info.other, Some(vec![String::from("github.com/example"),
                                                                  String::from("gitlab.com/example"),
                                                                  String::from("linkedin.com/example")]));
 
@@ -57,7 +57,7 @@ mod test {
         assert_eq!(education.location, String::from("location"));
         assert_eq!(education.major, String::from("major"));
         assert_eq!(education.graduation, String::from("graduation"));
-        assert_eq!(education.extras, Option::Some(vec![String::from("Foo"),
+        assert_eq!(education.extras, Some(vec![String::from("Foo"),
                                                        String::from("Bar"),
                                                        String::from("Baz")]));
 

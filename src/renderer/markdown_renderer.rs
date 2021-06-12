@@ -47,7 +47,7 @@ impl Renderer<PersonalInfo, String> for MarkdownRenderer {
         let mut text = format!("# {}\n\n", element.name);
         text = format!("{}- Email: {}\n", text, element.email);
         text = format!("{}- GitHub: {}\n", text, add_https_to_url(&element.github));
-        let phone = get_phone_number(&element.phone, config);
+        let phone = get_phone_number(element.phone.as_ref(), config);
         if let Some(phone) = phone {
             text = format!("{}- Phone: {}\n", text, phone)
         }

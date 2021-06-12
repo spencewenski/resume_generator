@@ -49,11 +49,13 @@ pub fn add_https_to_url(url: &str) -> String {
     }
 }
 
-pub fn get_phone_number(phone_number: &str, config: &Config) -> Option<String> {
-    if config.args.public {
+pub fn get_phone_number(phone_number: Option<&String>, config: &Config) -> Option<String> {
+    if phone_number.is_none() {
+        None
+    } else if config.args.public {
         None
     } else {
-        Some(phone_number.to_owned())
+        phone_number.cloned()
     }
 }
 
