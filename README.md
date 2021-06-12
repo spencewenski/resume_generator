@@ -13,7 +13,7 @@ git clone --depth 1 https://github.com/spencewenski/resume_generator.git
 
 ## Running
 ```bash
-cargo run -- cargo run -- -i $HOME/Desktop/resume/resume.toml -o spencer_ferris -d $HOME/Desktop/resume/output
+cargo run -- cargo run -- -i $HOME/Desktop/resume/resume.toml -o resume -d $HOME/Desktop/resume/output
 ```
 
 ## Design
