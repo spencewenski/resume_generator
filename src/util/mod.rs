@@ -41,6 +41,14 @@ pub fn write_string_to_path(s: &str, path: &Path) -> Result<PathBuf, String> {
     Ok(path.to_path_buf())
 }
 
+pub fn add_https_to_url(url: &str) -> String {
+    if url.starts_with("https://") {
+        url.to_owned()
+    } else {
+        format!("https://{}", url)
+    }
+}
+
 pub fn get_phone_number(phone_number: &str, config: &Config) -> Option<String> {
     if config.args.public {
         None

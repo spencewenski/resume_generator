@@ -28,14 +28,14 @@ impl Renderer<Resume, String> for TextRenderer {
         let mut text = self.render(&element.personal_info, &config)?;
         text = format!("{}{}", text, self.render(&element.objective, &config)?);
         text = format!("{}{}", text, self.render(&element.professional_experience, config)?);
-        if let Some(x) = &element.other_experience {
-            text = format!("{}{}", text, self.render(x, config)?);
+        if let Some(e) = &element.other_experience {
+            text = format!("{}{}", text, self.render(e, config)?);
         }
-        if let Some(x) = &element.technologies {
-            text = format!("{}{}", text, self.render(x, config)?);
+        if let Some(e) = &element.technologies {
+            text = format!("{}{}", text, self.render(e, config)?);
         }
-        if let Some(x) = &element.education {
-            text = format!("{}{}", text, self.render(x, config)?);
+        if let Some(e) = &element.education {
+            text = format!("{}{}", text, self.render(e, config)?);
         }
         text = format!("{}{footer:^width$}\n", text,
                        footer=footer_text(),
@@ -190,7 +190,7 @@ fn split_string_across_lines(s: &str, width: usize) -> String {
 
 #[cfg(test)]
 mod test {
-    use crate::data::{PersonalInfo, Resume};
+    use crate::data::{PersonalInfo};
     use crate::renderer::text_renderer::{TextRenderer, split_string_across_lines};
     use crate::renderer::Renderer;
     use crate::config::format_config::{TextConfig, FormatConfig};
@@ -219,7 +219,7 @@ mod test {
         };
         let rendered: String = TextRenderer::new().render(&personal_info, &config).unwrap();
 
-        // assert_eq!(rendered, "                                              Foo Bar                                               \n");
+        assert_eq!(rendered, "                     Foo Bar                      \n\ngithub.com/foo     1-555-555-5555      foo@bar.com\n\n");
     }
 
     #[test]
