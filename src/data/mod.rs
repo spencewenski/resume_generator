@@ -10,6 +10,7 @@ impl Resume {
 
 #[derive(Debug, Serialize, Deserialize, Default)]
 pub struct Resume {
+    pub name: String,
     pub personal_info: PersonalInfo,
     pub objective: Objective,
     pub professional_experience: Vec<ProfessionalExperience>,
@@ -23,13 +24,23 @@ pub struct Resume {
 
 #[derive(Debug, Serialize, Deserialize, Default)]
 pub struct PersonalInfo {
-    pub name: String,
+    // todo: put everything else in OtherPersonalInfo?
     pub email: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub phone: Option<String>,
     pub github: String,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub other: Option<Vec<String>>,
+    pub other: Option<Vec<OtherPersonalInfo>>,
+}
+
+#[derive(Debug, Serialize, Deserialize, Default)]
+pub struct OtherPersonalInfo {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub item_name: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub url: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub description: Option<String>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Default)]
@@ -59,7 +70,17 @@ pub struct Education {
 
 #[derive(Debug, Serialize, Deserialize, Default)]
 pub struct OtherExperience {
-    pub projects: Vec<String>,
+    pub projects: Vec<ProjectInfo>,
+}
+
+#[derive(Debug, Serialize, Deserialize, Default)]
+pub struct ProjectInfo {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub project_name: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub project_url: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub project_description: Option<String>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Default)]
@@ -74,7 +95,6 @@ mod tests {
     #[test]
     fn test_personal_info() {
         let personal_info = PersonalInfo {
-            name: String::from("Foo Bar"),
             email: String::from("foo@example.com"),
             phone: Some(String::from("1-555-555-5555")),
             github: String::from("github.com/foo"),

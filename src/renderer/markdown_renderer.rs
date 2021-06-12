@@ -26,7 +26,8 @@ impl Renderer<Resume, PathBuf> for MarkdownRenderer {
 
 impl Renderer<Resume, String> for MarkdownRenderer {
     fn render(self: &Self, element: &Resume, config: &Config) -> Result<String, String> {
-        let mut text = self.render(&element.personal_info, config)?;
+        let mut text = format!("# {}\n\n", element.name);
+        text = format!("{}\n{}", text, self.render(&element.personal_info, config)?);
         text = format!("{}\n{}", text, self.render(&element.objective, config)?);
         text = format!("{}\n{}", text, self.render(&element.professional_experience, config)?);
         if let Some(e) = &element.other_experience {
@@ -44,8 +45,7 @@ impl Renderer<Resume, String> for MarkdownRenderer {
 
 impl Renderer<PersonalInfo, String> for MarkdownRenderer {
     fn render(self: &Self, element: &PersonalInfo, config: &Config) -> Result<String, String> {
-        let mut text = format!("# {}\n\n", element.name);
-        text = format!("{}- Email: {}\n", text, element.email);
+        let mut text = format!("- Email: {}\n", element.email);
         text = format!("{}- GitHub: {}\n", text, add_https_to_url(&element.github));
         let phone = get_phone_number(element.phone.as_ref(), config);
         if let Some(phone) = phone {
