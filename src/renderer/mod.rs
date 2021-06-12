@@ -5,6 +5,7 @@ use crate::renderer::pdf_renderer::PdfRenderer;
 use std::path::PathBuf;
 use crate::renderer::markdown_renderer::MarkdownRenderer;
 
+pub mod github_renderer;
 pub mod markdown_renderer;
 pub mod text_renderer;
 pub mod pdf_renderer;
