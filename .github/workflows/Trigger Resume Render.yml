@@ -28,5 +28,5 @@ jobs:
             -X POST \
             -H "Accept: application/vnd.github.v3+json" \
             https://api.github.com/repos/spencewenski/resume/dispatches \
-            -d '{"event_type":"repository_dispatch"}'
+            -d '{"event_type":"repository_dispatch"}' \
             -H "Authorization: token ${{ secrets.API_TOKEN }}"
