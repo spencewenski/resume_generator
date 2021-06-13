@@ -1,13 +1,16 @@
-[personal_info]
 name = "Foo Bar"
+
+[personal_info]
 email = "foo@example.com"
 phone = "555-555-5555"
 github = "github.com/foo"
-other = [
-    "github.com/example",
-    "gitlab.com/example",
-    "linkedin.com/example"
-]
+
+[[personal_info.other]]
+item = "Foo"
+url = "https://example.com"
+
+[[personal_info.other]]
+item = "Bar"
 
 [objective]
 objective = "objective"
@@ -54,9 +57,7 @@ technologies = [
     "Baz",
 ]
 
-[other_experience]
-projects = [
-    "Foo",
-    "Bar",
-    "Baz",
-]
+[[other_experience.projects]]
+project_name = "Project Name"
+url = "https://example.com"
+description = "Description"

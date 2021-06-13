@@ -1,11 +1,11 @@
 use crate::renderer::Renderer;
-use crate::data::{Resume, PersonalInfo, Objective, ProfessionalExperience, OtherExperience, Technologies, Education};
+use crate::data::{Resume, PersonalInfo, Objective, ProfessionalExperience, OtherExperience, Technologies, Education, ProjectInfo};
 use crate::config::Config;
 use latex::{Document, print, Element, PreambleElement, Paragraph};
-use crate::util::{get_path, write_string_to_path, footer_text, escape_special_chars, get_phone_number, time_range_string};
+use crate::util::{get_path, write_string_to_path, footer_text, escape_special_chars, time_range_string};
 use std::process::Command;
 use std::path::{Path, PathBuf};
-use std::fmt::Display;
+use std::borrow::BorrowMut;
 
 pub struct PdfRenderer;
 
@@ -81,6 +81,10 @@ impl Renderer<Resume, Document> for PdfRenderer {
 
         // Add the actual resume content
         {
+            // Name
+            doc.push(Element::Environment(String::from("center"),
+                                      vec![format!("\\bf\\Large {}", element.name)]));
+
             // Header
             doc.push_doc(&self.render(&element.personal_info, config)?);
 
@@ -112,14 +116,11 @@ impl Renderer<Resume, Document> for PdfRenderer {
 }
 
 impl Renderer<PersonalInfo, Document> for PdfRenderer {
-    fn render(self: &Self, element: &PersonalInfo, config: &Config) -> Result<Document, String> {
+    fn render(self: &Self, element: &PersonalInfo, _config: &Config) -> Result<Document, String> {
         let mut doc = Document::default();
-        doc.push(Element::Environment(String::from("center"),
-                                      vec![format!("\\bf\\Large {}", element.name)]));
         // todo: display something else instead of phone number?
-        doc.push(Element::UserDefined(format!("{} \\hfill {} \\hfill {}",
+        doc.push(Element::UserDefined(format!("{} \\hfill {}",
                                               element.github,
-                                              get_phone_number(element.phone.as_ref(), config).unwrap_or_default(),
                                               element.email)));
         doc.push(Element::UserDefined(String::from("\\rule{\\textwidth}{0.4pt}")));
 
@@ -162,17 +163,52 @@ impl Renderer<ProfessionalExperience, Document> for PdfRenderer {
         doc.push(Element::UserDefined(format!("\\emph{{{}}} \\hfill {}\n",
                                               element.position,
                                               time_range_string(&element.start, &element.end))));
-        doc.push_doc(&list(&element.experience));
+        let mut itemize_content = vec![String::from("\\setlength\\itemsep{-0.05in}")];
+        let mut exp = element.experience.iter()
+            .map(|e| {
+                format!("\\item {}", e)
+            })
+            .collect::<Vec<String>>();
+        itemize_content.append(exp.borrow_mut());
+        doc.push(Element::Environment(String::from("itemize"), itemize_content));
         Ok(doc)
     }
 }
 
 impl Renderer<OtherExperience, Document> for PdfRenderer {
-    fn render(self: &Self, element: &OtherExperience, _config: &Config) -> Result<Document, String> {
+    fn render(self: &Self, element: &OtherExperience, config: &Config) -> Result<Document, String> {
         let mut doc = Document::default();
         doc.push_doc(&section_header("PROJECTS"));
-        doc.push_doc(&list(&element.projects));
+        // todo: clean up?
+        // let mut itemize_content = vec![String::from("\\setlength\\itemsep{-0.05in}")];
+        // let mut projects = element.projects.iter()
+        //     .map(|p| {
+        //         self.render(p, config)
+        //     })
+        //     .reduce(|a, b| {
+        //         let mut a = a?;
+        //         a.push_doc(&b?);
+        //         Ok(a)
+        //     }).unwrap_or(Err(format!("An error occurred while rendering other experience to LaTeX.")))?;
+        // itemize_content.append(projects.borrow_mut());
+        // doc.push_doc(&itemize_content);
+
+        let mut itemize_content = vec![String::from("\\setlength\\itemsep{-0.05in}")];
+        let mut projects = element.projects.iter()
+            .map(|e| {
+                self.render(e, config).unwrap_or_default()
+            })
+            .collect::<Vec<String>>();
+        itemize_content.append(projects.borrow_mut());
+        doc.push(Element::Environment(String::from("itemize"), itemize_content));
+
         Ok(doc)
+    }
+}
+
+impl Renderer<ProjectInfo, String> for PdfRenderer {
+    fn render(self: &Self, element: &ProjectInfo, _config: &Config) -> Result<String, String> {
+        Ok(format!("\\item {}\n", element.description))
     }
 }
 
@@ -207,14 +243,6 @@ fn section_header(header: &str) -> Document {
     let mut doc = Document::default();
     doc.push(Element::Environment(String::from("center"),
                                       vec![format!("{{\\bf {}}}", header)]));
-    doc
-}
-
-fn list<T>(items: &[T]) -> Document where T: Display {
-    let mut doc = Document::default();
-    items.iter().for_each(|x| {
-        doc.push(Element::UserDefined(format!("\\textbullet\\quad {}\n", x)));
-    });
     doc
 }
 

@@ -22,13 +22,18 @@ mod test {
     fn test_deserialize_toml() {
         let resume = TomlParser::parse("tst/test_resume.toml").unwrap();
 
-        assert_eq!(resume.personal_info.name, "Foo Bar");
+        assert_eq!(resume.name, "Foo Bar");
+
         assert_eq!(resume.personal_info.email, String::from("foo@example.com"));
-        assert_eq!(resume.personal_info.phone, Some(String::from("555-555-5555")));
         assert_eq!(resume.personal_info.github, String::from("github.com/foo"));
-        assert_eq!(resume.personal_info.other, Some(vec![String::from("github.com/example"),
-                                                                 String::from("gitlab.com/example"),
-                                                                 String::from("linkedin.com/example")]));
+
+        assert!(resume.personal_info.other.is_some());
+        let personal_info = resume.personal_info.other.unwrap();
+        assert_eq!(personal_info.len(), 2);
+        assert_eq!(personal_info[0].item, String::from("Foo"));
+        assert_eq!(personal_info[0].url, Some(String::from("https://example.com")));
+        assert_eq!(personal_info[1].item, String::from("Bar"));
+        assert!(personal_info[1].url.is_none());
 
         assert_eq!(resume.objective.objective, "objective");
 
@@ -62,9 +67,10 @@ mod test {
                                                        String::from("Baz")]));
 
         assert!(resume.other_experience.is_some());
-        let other_experience = resume.other_experience.unwrap();
-        assert_eq!(other_experience.projects, vec![String::from("Foo"),
-                                                   String::from("Bar"),
-                                                   String::from("Baz")]);
+        let exp = resume.other_experience.unwrap();
+        assert_eq!(exp.projects.len(), 1);
+        assert_eq!(exp.projects[0].project_name, String::from("Project Name"));
+        assert_eq!(exp.projects[0].url, String::from("https://example.com"));
+        assert_eq!(exp.projects[0].description, String::from("Description"));
     }
 }

@@ -1,4 +1,4 @@
-use argparse::{ArgumentParser, StoreOption, StoreTrue, Store};
+use argparse::{ArgumentParser, StoreOption, Store};
 
 #[derive(Debug, Serialize, Deserialize, Default)]
 pub struct Arguments {
@@ -6,7 +6,6 @@ pub struct Arguments {
     pub output_name: String,
     pub output_dir: Option<String>,
     pub format_config: Option<String>,
-    pub public: bool,
     pub email: Option<String>,
 }
 
@@ -38,11 +37,6 @@ impl Arguments {
                 .add_option(&["-f", "--format-config"],
                             StoreOption,
                             "Configuration file for the various resume formats. Optional.");
-
-            ap.refer(&mut args.public)
-                .add_option(&["--public"],
-                            StoreTrue,
-                            "Will this resume be made publicly available, e.g. on a personal website? Default: false");
 
             ap.refer(&mut args.email)
                 .add_option(&["-e", "--email"],

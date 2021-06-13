@@ -1,9 +1,8 @@
 use crate::renderer::Renderer;
-use crate::data::{Resume, PersonalInfo, Objective, ProfessionalExperience, OtherExperience, Technologies, Education};
+use crate::data::{Resume, PersonalInfo, Objective, ProfessionalExperience, OtherExperience, Technologies, Education, ProjectInfo, OtherPersonalInfo};
 use std::path::PathBuf;
 use crate::config::Config;
-use crate::util::{write_string_to_file, get_phone_number, add_https_to_url, time_range_string};
-use std::fmt::Display;
+use crate::util::{write_string_to_file, add_https_to_url, time_range_string, split_string_across_lines};
 
 pub struct MarkdownRenderer;
 
@@ -26,18 +25,18 @@ impl Renderer<Resume, PathBuf> for MarkdownRenderer {
 
 impl Renderer<Resume, String> for MarkdownRenderer {
     fn render(self: &Self, element: &Resume, config: &Config) -> Result<String, String> {
-        let mut text = format!("# {}\n\n", element.name);
-        text = format!("{}\n{}", text, self.render(&element.personal_info, config)?);
-        text = format!("{}\n{}", text, self.render(&element.objective, config)?);
-        text = format!("{}\n{}", text, self.render(&element.professional_experience, config)?);
+        let mut text = format!("# {}", element.name);
+        text = format!("{}\n\n{}", text, self.render(&element.objective, config)?);
+        text = format!("{}\n\n{}", text, self.render(&element.personal_info, config)?);
+        text = format!("{}\n\n{}", text, self.render(&element.professional_experience, config)?);
         if let Some(e) = &element.other_experience {
-            text = format!("{}\n{}", text, self.render(e, config)?);
+            text = format!("{}\n\n{}", text, self.render(e, config)?);
         }
         if let Some(e) = &element.technologies {
-            text = format!("{}\n{}", text, self.render(e, config)?);
+            text = format!("{}\n\n{}", text, self.render(e, config)?);
         }
         if let Some(e) = &element.education {
-            text = format!("{}\n{}", text, self.render(e, config)?);
+            text = format!("{}\n\n{}", text, self.render(e, config)?);
         }
         Ok(text)
     }
@@ -45,35 +44,64 @@ impl Renderer<Resume, String> for MarkdownRenderer {
 
 impl Renderer<PersonalInfo, String> for MarkdownRenderer {
     fn render(self: &Self, element: &PersonalInfo, config: &Config) -> Result<String, String> {
-        let mut text = format!("- Email: {}\n", element.email);
-        text = format!("{}- GitHub: {}\n", text, add_https_to_url(&element.github));
-        let phone = get_phone_number(element.phone.as_ref(), config);
-        if let Some(phone) = phone {
-            text = format!("{}- Phone: {}\n", text, phone)
+        let mut text = format!("## Links and Contact Info");
+        text = format!("{}\n- Email: [{}](mailto:{})", text, element.email, element.email);
+        text = format!("{}\n- GitHub: [{}]({})", text, element.github, add_https_to_url(&element.github));
+
+        let other_info = element.other.as_ref()
+            .map(|other| -> Result<String, String> {
+                let info = other.iter()
+                    .map(|e| {
+                        self.render(e, config)
+                    })
+                    .reduce(|a, b| {
+                        Ok(format!("{}\n{}", a?, b?))
+                    })
+                    .unwrap_or(Err(String::from("An error occurred while rendering personal info to markdown")));
+                Ok(info?)
+        });
+
+        if let Some(other_info) = other_info {
+            text = format!("{}\n{}", text, other_info?);
         }
+
         Ok(text)
     }
 }
 
+impl Renderer<OtherPersonalInfo, String> for MarkdownRenderer {
+    fn render(self: &Self, element: &OtherPersonalInfo, _config: &Config) -> Result<String, String> {
+        if let Some(url) = &element.url {
+            Ok(format!("- {}: [{}]({})", element.item, url, add_https_to_url(url)))
+        } else {
+            Ok(format!("- {}", element.item))
+        }
+    }
+}
+
 impl Renderer<Objective, String> for MarkdownRenderer {
-    fn render(self: &Self, element: &Objective, _config: &Config) -> Result<String, String> {
-        Ok(format!("{}\n", element.objective))
+    fn render(self: &Self, element: &Objective, config: &Config) -> Result<String, String> {
+        Ok(format!("{}", split_string_across_lines(&element.objective,
+                                                     config.format_config.markdown_config.width,
+                                                     None,
+                                                     None)))
     }
 }
 
 impl Renderer<Vec<ProfessionalExperience>, String> for MarkdownRenderer {
     fn render(self: &Self, element: &Vec<ProfessionalExperience>, config: &Config) -> Result<String, String> {
-        let mut text = format!("## Experience\n\n");
+        let mut text = format!("## Experience");
 
         let exp = element.iter()
-            .map(|x| {
-                self.render(x, config)
+            .map(|e| {
+                self.render(e, config)
             })
             .reduce(|a, b| {
                 Ok(format!("{}\n\n{}", a?, b?))
             })
             .unwrap_or(Err(String::from("An error occurred while rendering professional experience to markdown.")))?;
-        text = format!("{}\n{}\n", text, exp);
+
+        text = format!("{}\n{}", text, exp);
 
         Ok(text)
 
@@ -81,33 +109,70 @@ impl Renderer<Vec<ProfessionalExperience>, String> for MarkdownRenderer {
 }
 
 impl Renderer<ProfessionalExperience, String> for MarkdownRenderer {
-    fn render(self: &Self, element: &ProfessionalExperience, _config: &Config) -> Result<String, String> {
+    fn render(self: &Self, element: &ProfessionalExperience, config: &Config) -> Result<String, String> {
         let mut text = format!("### {}", element.organization);
         text = format!("{}\n```\n{}\n{}\n{}\n```",
                        text,
                        element.position,
                        time_range_string(&element.start, &element.end), element.location);
-        text = format!("{}\n{}", text, list(&element.experience)?);
+
+        let exp = element.experience.iter()
+            .map(|e| {
+                Ok(split_string_across_lines(e,
+                                          config.format_config.markdown_config.width,
+                                          Some(String::from("- ")),
+                                          Some(String::from("  "))))
+            })
+            .reduce(|a, b| {
+                Ok(format!("{}\n{}", a?, b?))
+            })
+            .unwrap_or(Err(String::from("An error occurred while rendering professional experience to markdown.")))?;
+
+        text = format!("{}\n{}", text, exp);
 
         Ok(text)
     }
 }
 
 impl Renderer<OtherExperience, String> for MarkdownRenderer {
-    fn render(self: &Self, element: &OtherExperience, _config: &Config) -> Result<String, String> {
-        Ok(format!("## Projects\n{}\n", list(&element.projects)?))
+    fn render(self: &Self, element: &OtherExperience, config: &Config) -> Result<String, String> {
+        let mut text = format!("## Projects");
+
+        // todo: clean up?
+        let projects = element.projects.iter()
+            .map(|e| {
+                self.render(e, config)
+            })
+            .reduce(|a, b| {
+                Ok(format!("{}\n{}", a?, b?))
+            })
+            .unwrap_or(Err(format!("An error occurred while rendering other experience to markdown.")))?;
+
+        text = format!("{}\n{}", text, projects);
+
+        Ok(text)
+    }
+}
+
+impl Renderer<ProjectInfo, String> for MarkdownRenderer {
+    fn render(self: &Self, element: &ProjectInfo, config: &Config) -> Result<String, String> {
+        let project_info = format!("[{}]({}) - {}", element.project_name, element.url, element.description);
+        Ok(split_string_across_lines(&project_info,
+                                     config.format_config.markdown_config.width,
+                                     Some(String::from("- ")),
+                                     Some(String::from("  "))))
     }
 }
 
 impl Renderer<Technologies, String> for MarkdownRenderer {
     fn render(self: &Self, element: &Technologies, _config: &Config) -> Result<String, String> {
-        Ok(format!("## Technologies\n{}\n", element.technologies.join(", ")))
+        Ok(format!("## Technologies\n{}", element.technologies.join(", ")))
     }
 }
 
 impl Renderer<Education, String> for MarkdownRenderer {
     fn render(self: &Self, element: &Education, _config: &Config) -> Result<String, String> {
-        let mut text = format!("## University\n### {}\n", element.school);
+        let mut text = format!("## University\n### {}", element.school);
         text = format!("{}\n```\n{}\n{}\n{}\n```",
                        text,
                        element.major,
@@ -115,17 +180,6 @@ impl Renderer<Education, String> for MarkdownRenderer {
                        element.location);
         Ok(text)
     }
-}
-
-fn list<T>(items: &[T]) -> Result<String, String> where T: Display {
-    items.iter()
-        .map(|item| {
-            format!("- {}", item)
-        })
-        .reduce(|a, b| {
-            format!("{}\n{}", a, b)
-        })
-        .ok_or(String::from("An error occurred while creating a list of items."))
 }
 
 #[cfg(test)]

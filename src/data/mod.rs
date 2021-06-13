@@ -24,10 +24,7 @@ pub struct Resume {
 
 #[derive(Debug, Serialize, Deserialize, Default)]
 pub struct PersonalInfo {
-    // todo: put everything else in OtherPersonalInfo?
     pub email: String,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub phone: Option<String>,
     pub github: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub other: Option<Vec<OtherPersonalInfo>>,
@@ -35,12 +32,8 @@ pub struct PersonalInfo {
 
 #[derive(Debug, Serialize, Deserialize, Default)]
 pub struct OtherPersonalInfo {
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub item_name: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    pub item: String,
     pub url: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub description: Option<String>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Default)]
@@ -75,12 +68,9 @@ pub struct OtherExperience {
 
 #[derive(Debug, Serialize, Deserialize, Default)]
 pub struct ProjectInfo {
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub project_name: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub project_url: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub project_description: Option<String>,
+    pub project_name: String,
+    pub url: String,
+    pub description: String,
 }
 
 #[derive(Debug, Serialize, Deserialize, Default)]
@@ -96,15 +86,10 @@ mod tests {
     fn test_personal_info() {
         let personal_info = PersonalInfo {
             email: String::from("foo@example.com"),
-            phone: Some(String::from("1-555-555-5555")),
             github: String::from("github.com/foo"),
-            other: Some(vec![ String::from("Foo"), String::from("Bar") ]),
+            ..Default::default()
         };
 
-        assert_eq!(personal_info.name, String::from("Foo Bar"));
         assert_eq!(personal_info.email, String::from("foo@example.com"));
-        assert_eq!(personal_info.phone, Some(String::from("1-555-555-5555")));
-        assert_eq!(personal_info.github, String::from("github.com/foo"));
-        assert_eq!(personal_info.other, Some(vec![String::from("Foo"), String::from("Bar")]));
     }
 }
