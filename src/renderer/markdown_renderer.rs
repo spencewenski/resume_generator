@@ -156,7 +156,10 @@ impl Renderer<OtherExperience, String> for MarkdownRenderer {
 
 impl Renderer<ProjectInfo, String> for MarkdownRenderer {
     fn render(self: &Self, element: &ProjectInfo, config: &Config) -> Result<String, String> {
-        let project_info = format!("[{}]({}) - {}", element.project_name, element.url, element.description);
+        let project_info = format!("[{}]({}) - {}",
+                                   element.project_name,
+                                   add_https_to_url(&element.url),
+                                   element.description);
         Ok(split_string_across_lines(&project_info,
                                      config.format_config.markdown_config.width,
                                      Some(String::from("- ")),

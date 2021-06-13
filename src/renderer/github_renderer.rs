@@ -1,8 +1,8 @@
 use crate::renderer::Renderer;
-use crate::data::{Resume, PersonalInfo, OtherPersonalInfo, Objective, OtherExperience, ProjectInfo, Technologies};
+use crate::data::{Resume, PersonalInfo, Objective, OtherExperience, Technologies};
 use std::path::PathBuf;
 use crate::config::Config;
-use crate::util::{write_string_to_file, add_https_to_url, split_string_across_lines};
+use crate::util::{write_string_to_file};
 use crate::renderer::markdown_renderer::MarkdownRenderer;
 
 pub struct GitHubRenderer {
