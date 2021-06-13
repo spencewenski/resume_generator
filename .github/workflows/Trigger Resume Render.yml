@@ -1,5 +1,4 @@
 # This workflow triggers a build of a private resume data repo
-# Todo: put the resume repo in an environment variable
 
 name: Trigger Resume Render
 
