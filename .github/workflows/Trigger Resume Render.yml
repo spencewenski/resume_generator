@@ -4,11 +4,11 @@ name: Trigger Resume Render
 
 # Controls when the action will run. 
 on:
-  workflow_run:
-    workflows: ["Build and Test"]
-    branches: [main]
-    types: 
-      - completed
+#   workflow_run:
+#     workflows: ["Build and Test"]
+#     branches: [main]
+#     types: 
+#       - completed
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
