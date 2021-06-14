@@ -6,7 +6,12 @@
 # Rust
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 # LaTeX
+## Arch linux
 sudo pacman -Sy texlive-core
+## Mac - also may need to add pdflatex to path (located in /Library/TeX/texbin)
+brew install --cask basictex
+## Ubuntu
+sudo apt -y install texlive
 # Get the code
 git clone --depth 1 https://github.com/spencewenski/resume_generator.git
 ```
