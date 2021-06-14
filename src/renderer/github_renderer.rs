@@ -2,7 +2,7 @@ use crate::renderer::Renderer;
 use crate::data::{Resume, PersonalInfo, Objective, OtherExperience, Technologies};
 use std::path::PathBuf;
 use crate::config::Config;
-use crate::util::{write_string_to_file};
+use crate::util::{write_string_to_file, FooterText, add_https_to_url};
 use crate::renderer::markdown_renderer::MarkdownRenderer;
 
 pub struct GitHubRenderer {
@@ -39,6 +39,14 @@ impl Renderer<Resume, String> for GitHubRenderer {
         if let Some(e) = &element.technologies {
             text = format!("{}\n\n{}", text, self.render(e, config)?);
         }
+
+        let footer_text = FooterText::new();
+        text = format!("{}\n\n---\n\n{} [{}]({})\n",
+                       text,
+                       footer_text.prefix,
+                       footer_text.url,
+                       add_https_to_url(&footer_text.url));
+
         Ok(text)
     }
 }
@@ -46,7 +54,7 @@ impl Renderer<Resume, String> for GitHubRenderer {
 impl Renderer<PersonalInfo, String> for GitHubRenderer {
     fn render(self: &Self, element: &PersonalInfo, config: &Config) -> Result<String, String> {
         let info = self.md.render(element, config)?;
-        // Don't want to display email on GitHub
+        // Don't want to display email or linkedin on GitHub
         // todo: is there a way to do this without using 'to_owned'?
         let info = info.split("\n")
             .map(|x| { x.to_owned()})
