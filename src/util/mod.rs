@@ -52,11 +52,26 @@ pub fn time_range_string(start: &str, end: &str) -> String {
     format!("{} - {}", start, end)
 }
 
-pub fn footer_text() -> String {
-    let now = Local::now();
-    // todo: return the link separately so renderers can add it as a link?
-    format!("Generated on {day} {month} {year} using github.com/spencewenski/resume_generator",
-            day=now.day(), month=now.format("%B"), year=now.year())
+pub struct FooterText {
+    pub basic_text: String,
+    pub prefix: String,
+    pub url: String,
+}
+
+impl FooterText {
+    pub fn new() -> FooterText {
+        let now = Local::now();
+        let prefix = format!("Generated on {day} {month} {year} using",
+                             day=now.day(), month=now.format("%B"), year=now.year());
+        let url = String::from("github.com/spencewenski/resume_generator");
+        let basic_text = format!("{} {}", prefix, url);
+        FooterText {
+            basic_text,
+            prefix,
+            url
+        }
+    }
+
 }
 
 /// Escape some special characters by placing a '\' in front

@@ -1,7 +1,7 @@
 use crate::renderer::Renderer;
 use crate::data::{Resume, PersonalInfo, Objective, ProfessionalExperience, OtherExperience, Technologies, Education, ProjectInfo};
 use crate::config::Config;
-use crate::util::{footer_text, write_string_to_file, time_range_string, split_string_across_lines};
+use crate::util::{write_string_to_file, time_range_string, split_string_across_lines, FooterText};
 use std::path::PathBuf;
 
 pub struct TextRenderer;
@@ -39,7 +39,7 @@ impl Renderer<Resume, String> for TextRenderer {
             text = format!("{}\n\n{}", text, self.render(e, config)?);
         }
         text = format!("{}\n\n{footer:^width$}\n", text,
-                       footer=footer_text(),
+                       footer=FooterText::new().basic_text,
                        width=config.format_config.text_config.width);
         Ok(text)
     }

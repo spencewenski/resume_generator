@@ -2,7 +2,7 @@ use crate::renderer::Renderer;
 use crate::data::{Resume, PersonalInfo, Objective, ProfessionalExperience, OtherExperience, Technologies, Education, ProjectInfo, OtherPersonalInfo};
 use std::path::PathBuf;
 use crate::config::Config;
-use crate::util::{write_string_to_file, add_https_to_url, time_range_string, split_string_across_lines};
+use crate::util::{write_string_to_file, add_https_to_url, time_range_string, split_string_across_lines, FooterText};
 
 pub struct MarkdownRenderer;
 
@@ -38,6 +38,14 @@ impl Renderer<Resume, String> for MarkdownRenderer {
         if let Some(e) = &element.education {
             text = format!("{}\n\n{}", text, self.render(e, config)?);
         }
+
+        let footer_text = FooterText::new();
+        text = format!("{}\n\n---\n\n{} [{}]({})\n",
+                       text,
+                       footer_text.prefix,
+                       footer_text.url,
+                       add_https_to_url(&footer_text.url));
+
         Ok(text)
     }
 }

@@ -2,7 +2,7 @@ use crate::renderer::Renderer;
 use crate::data::{Resume, PersonalInfo, Objective, ProfessionalExperience, OtherExperience, Technologies, Education, ProjectInfo};
 use crate::config::Config;
 use latex::{Document, print, Element, PreambleElement, Paragraph};
-use crate::util::{get_path, write_string_to_path, footer_text, escape_special_chars, time_range_string};
+use crate::util::{get_path, write_string_to_path, escape_special_chars, time_range_string, FooterText};
 use std::process::Command;
 use std::path::{Path, PathBuf};
 use std::borrow::BorrowMut;
@@ -75,7 +75,7 @@ impl Renderer<Resume, Document> for PdfRenderer {
                 .push(PreambleElement::UserDefined(String::from("\\fancyhf{}")))
                 .push(PreambleElement::UserDefined(String::from(r"\pagestyle{fancy}")))
                 .push(PreambleElement::UserDefined(String::from(r"\renewcommand{\headrulewidth}{0pt}")))
-                .push(PreambleElement::UserDefined(String::from(format!("\\cfoot{{{}}}", escape_special_chars(&footer_text())))));
+                .push(PreambleElement::UserDefined(String::from(format!("\\cfoot{{{}}}", escape_special_chars(&FooterText::new().basic_text)))));
 
         }
 
