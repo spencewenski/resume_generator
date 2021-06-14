@@ -53,6 +53,9 @@ impl Renderer<PersonalInfo, String> for GitHubRenderer {
             .filter(|x| {
                 !x.contains(&element.email)
             })
+            .filter(|x| {
+                !x.to_lowercase().contains("linkedin")
+            })
             .collect::<Vec<String>>()
             .join("\n");
         Ok(info)
