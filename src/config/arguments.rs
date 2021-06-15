@@ -1,4 +1,4 @@
-use argparse::{ArgumentParser, StoreOption, Store};
+use argparse::{ArgumentParser, Store, StoreOption};
 
 #[derive(Debug, Serialize, Deserialize, Default)]
 pub struct Arguments {
@@ -17,15 +17,15 @@ impl Arguments {
             ap.set_description("Resume Generator.");
 
             ap.refer(&mut args.resume_input)
-                .add_option(&["-i", "--resume-input"],
-                            Store,
-                            "The resume data file.")
+                .add_option(&["-i", "--resume-input"], Store, "The resume data file.")
                 .required();
 
             ap.refer(&mut args.output_name)
-                .add_option(&["-o", "--output-name"],
-                            Store,
-                            "The name to use for the generated resumes.")
+                .add_option(
+                    &["-o", "--output-name"],
+                    Store,
+                    "The name to use for the generated resumes.",
+                )
                 .required();
 
             ap.refer(&mut args.output_dir)
@@ -33,15 +33,17 @@ impl Arguments {
                             StoreOption,
                             "The directory in which resume files will be placed. The directory is created if it doesn't exist Default: current directory");
 
-            ap.refer(&mut args.format_config)
-                .add_option(&["-f", "--format-config"],
-                            StoreOption,
-                            "Configuration file for the various resume formats. Optional.");
+            ap.refer(&mut args.format_config).add_option(
+                &["-f", "--format-config"],
+                StoreOption,
+                "Configuration file for the various resume formats. Optional.",
+            );
 
-            ap.refer(&mut args.email)
-                .add_option(&["-e", "--email"],
-                            StoreOption,
-                            "Override the email in the resume config with this one.");
+            ap.refer(&mut args.email).add_option(
+                &["-e", "--email"],
+                StoreOption,
+                "Override the email in the resume config with this one.",
+            );
 
             ap.parse_args_or_exit();
         }

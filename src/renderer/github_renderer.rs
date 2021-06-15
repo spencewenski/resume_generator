@@ -1,9 +1,9 @@
-use crate::renderer::Renderer;
-use crate::data::{Resume, PersonalInfo, Objective, OtherExperience, Technologies};
-use std::path::PathBuf;
 use crate::config::Config;
-use crate::util::{write_string_to_file, FooterText, add_https_to_url};
+use crate::data::{Objective, OtherExperience, PersonalInfo, Resume, Technologies};
 use crate::renderer::markdown_renderer::MarkdownRenderer;
+use crate::renderer::Renderer;
+use crate::util::{add_https_to_url, write_string_to_file, FooterText};
+use std::path::PathBuf;
 
 pub struct GitHubRenderer {
     md: MarkdownRenderer,
@@ -21,10 +21,12 @@ impl Renderer<Resume, PathBuf> for GitHubRenderer {
     fn render(self: &Self, element: &Resume, config: &Config) -> Result<PathBuf, String> {
         let s: String = self.render(element, config)?;
 
-        write_string_to_file(&s,
-                             config.args.output_dir.as_ref(),
-                             &format!("{}-github", &config.args.output_name),
-                             Some(String::from("md")).as_ref())
+        write_string_to_file(
+            &s,
+            config.args.output_dir.as_ref(),
+            &format!("{}-github", &config.args.output_name),
+            Some(String::from("md")).as_ref(),
+        )
     }
 }
 
@@ -32,7 +34,11 @@ impl Renderer<Resume, String> for GitHubRenderer {
     fn render(self: &Self, element: &Resume, config: &Config) -> Result<String, String> {
         let mut text = format!("# {}", element.name);
         text = format!("{}\n\n{}", text, self.render(&element.objective, config)?);
-        text = format!("{}\n\n{}", text, self.render(&element.personal_info, config)?);
+        text = format!(
+            "{}\n\n{}",
+            text,
+            self.render(&element.personal_info, config)?
+        );
         if let Some(e) = &element.other_experience {
             text = format!("{}\n\n{}", text, self.render(e, config)?);
         }
@@ -41,11 +47,13 @@ impl Renderer<Resume, String> for GitHubRenderer {
         }
 
         let footer_text = FooterText::new();
-        text = format!("{}\n\n---\n\n{} [{}]({})\n",
-                       text,
-                       footer_text.prefix,
-                       footer_text.url,
-                       add_https_to_url(&footer_text.url));
+        text = format!(
+            "{}\n\n---\n\n{} [{}]({})\n",
+            text,
+            footer_text.prefix,
+            footer_text.url,
+            add_https_to_url(&footer_text.url)
+        );
 
         Ok(text)
     }
@@ -56,14 +64,11 @@ impl Renderer<PersonalInfo, String> for GitHubRenderer {
         let info = self.md.render(element, config)?;
         // Don't want to display email or linkedin on GitHub
         // todo: is there a way to do this without using 'to_owned'?
-        let info = info.split("\n")
-            .map(|x| { x.to_owned()})
-            .filter(|x| {
-                !x.contains(&element.email)
-            })
-            .filter(|x| {
-                !x.to_lowercase().contains("linkedin")
-            })
+        let info = info
+            .split("\n")
+            .map(|x| x.to_owned())
+            .filter(|x| !x.contains(&element.email))
+            .filter(|x| !x.to_lowercase().contains("linkedin"))
             .collect::<Vec<String>>()
             .join("\n");
         Ok(info)

@@ -1,5 +1,5 @@
-use crate::config::format_config::FormatConfig;
 use crate::config::arguments::Arguments;
+use crate::config::format_config::FormatConfig;
 use crate::util::{string_from_file, toml_from_string};
 
 pub mod arguments;

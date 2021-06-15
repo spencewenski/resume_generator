@@ -1,4 +1,4 @@
-use crate::data::parser::{TomlParser, Parser};
+use crate::data::parser::{Parser, TomlParser};
 
 mod parser;
 

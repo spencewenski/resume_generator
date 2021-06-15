@@ -12,9 +12,7 @@ pub struct TextConfig {
 
 impl Default for TextConfig {
     fn default() -> Self {
-        TextConfig {
-            width: 100,
-        }
+        TextConfig { width: 100 }
     }
 }
 
@@ -38,8 +36,6 @@ pub struct MarkdownConfig {
 
 impl Default for MarkdownConfig {
     fn default() -> Self {
-        MarkdownConfig {
-            width: 120,
-        }
+        MarkdownConfig { width: 120 }
     }
 }

@@ -1,11 +1,16 @@
-use crate::renderer::Renderer;
-use crate::data::{Resume, PersonalInfo, Objective, ProfessionalExperience, OtherExperience, Technologies, Education, ProjectInfo};
 use crate::config::Config;
-use latex::{Document, print, Element, PreambleElement, Paragraph};
-use crate::util::{get_path, write_string_to_path, escape_special_chars, time_range_string, FooterText};
-use std::process::Command;
-use std::path::{Path, PathBuf};
+use crate::data::{
+    Education, Objective, OtherExperience, PersonalInfo, ProfessionalExperience, ProjectInfo,
+    Resume, Technologies,
+};
+use crate::renderer::Renderer;
+use crate::util::{
+    escape_special_chars, get_path, time_range_string, write_string_to_path, FooterText,
+};
+use latex::{print, Document, Element, Paragraph, PreambleElement};
 use std::borrow::BorrowMut;
+use std::path::{Path, PathBuf};
+use std::process::Command;
 
 pub struct PdfRenderer;
 
@@ -20,9 +25,11 @@ impl Renderer<Resume, PathBuf> for PdfRenderer {
     fn render(self: &Self, element: &Resume, config: &Config) -> Result<PathBuf, String> {
         let s: String = self.render(element, config)?;
 
-        let path = get_path(config.args.output_dir.as_ref(),
-                             &config.args.output_name,
-                             Some(String::from("tex")).as_ref());
+        let path = get_path(
+            config.args.output_dir.as_ref(),
+            &config.args.output_name,
+            Some(String::from("tex")).as_ref(),
+        );
         write_string_to_path(&s, &path)?;
 
         let x = Command::new("pdflatex")
@@ -31,10 +38,16 @@ impl Renderer<Resume, PathBuf> for PdfRenderer {
             .arg(path.as_os_str())
             .output()
             .map_err(|e| {
-                format!("An error occurred while running the pdflatex command: {}", e)
+                format!(
+                    "An error occurred while running the pdflatex command: {}",
+                    e
+                )
             })?;
         if !x.status.success() {
-            Err(format!("An error occurred while running the pdflatex command: {:?}", x))
+            Err(format!(
+                "An error occurred while running the pdflatex command: {:?}",
+                x
+            ))
         } else {
             Ok(path.with_extension("pdf"))
         }
@@ -49,7 +62,10 @@ impl Renderer<Resume, String> for PdfRenderer {
 
         // convert to a string
         print(&doc).map_err(|e| {
-            format!("An error occurred while rendering the LaTeX document to a string: {}", e)
+            format!(
+                "An error occurred while rendering the LaTeX document to a string: {}",
+                e
+            )
         })
     }
 }
@@ -63,7 +79,10 @@ impl Renderer<Resume, Document> for PdfRenderer {
                 // Set the margins
                 .push(PreambleElement::UsePackage {
                     package: String::from("geometry"),
-                    argument: Some(format!("margin={}", &config.format_config.pdf_config.margin)),
+                    argument: Some(format!(
+                        "margin={}",
+                        &config.format_config.pdf_config.margin
+                    )),
                 })
                 // Set up the font encoding
                 .push(PreambleElement::UsePackage {
@@ -73,17 +92,25 @@ impl Renderer<Resume, Document> for PdfRenderer {
                 // Set up the footer and remove the header
                 .use_package("fancyhdr")
                 .push(PreambleElement::UserDefined(String::from("\\fancyhf{}")))
-                .push(PreambleElement::UserDefined(String::from(r"\pagestyle{fancy}")))
-                .push(PreambleElement::UserDefined(String::from(r"\renewcommand{\headrulewidth}{0pt}")))
-                .push(PreambleElement::UserDefined(String::from(format!("\\cfoot{{{}}}", escape_special_chars(&FooterText::new().basic_text)))));
-
+                .push(PreambleElement::UserDefined(String::from(
+                    r"\pagestyle{fancy}",
+                )))
+                .push(PreambleElement::UserDefined(String::from(
+                    r"\renewcommand{\headrulewidth}{0pt}",
+                )))
+                .push(PreambleElement::UserDefined(String::from(format!(
+                    "\\cfoot{{{}}}",
+                    escape_special_chars(&FooterText::new().basic_text)
+                ))));
         }
 
         // Add the actual resume content
         {
             // Name
-            doc.push(Element::Environment(String::from("center"),
-                                      vec![format!("\\bf\\Large {}", element.name)]));
+            doc.push(Element::Environment(
+                String::from("center"),
+                vec![format!("\\bf\\Large {}", element.name)],
+            ));
 
             // Header
             doc.push_doc(&self.render(&element.personal_info, config)?);
@@ -119,10 +146,13 @@ impl Renderer<PersonalInfo, Document> for PdfRenderer {
     fn render(self: &Self, element: &PersonalInfo, _config: &Config) -> Result<Document, String> {
         let mut doc = Document::default();
         // todo: display something else instead of phone number?
-        doc.push(Element::UserDefined(format!("{} \\hfill {}",
-                                              element.github,
-                                              element.email)));
-        doc.push(Element::UserDefined(String::from("\\rule{\\textwidth}{0.4pt}")));
+        doc.push(Element::UserDefined(format!(
+            "{} \\hfill {}",
+            element.github, element.email
+        )));
+        doc.push(Element::UserDefined(String::from(
+            "\\rule{\\textwidth}{0.4pt}",
+        )));
 
         Ok(doc)
     }
@@ -137,19 +167,28 @@ impl Renderer<Objective, Document> for PdfRenderer {
 }
 
 impl Renderer<Vec<ProfessionalExperience>, Document> for PdfRenderer {
-    fn render(self: &Self, element: &Vec<ProfessionalExperience>, config: &Config) -> Result<Document, String> {
+    fn render(
+        self: &Self,
+        element: &Vec<ProfessionalExperience>,
+        config: &Config,
+    ) -> Result<Document, String> {
         let mut doc = Document::default();
         doc.push_doc(&section_header("EXPERIENCE"));
 
-        let reduced = element.iter()
-            .map(|x| { self.render(x, config)})
+        let reduced = element
+            .iter()
+            .map(|x| self.render(x, config))
             .reduce(|a, b| {
                 let mut a = a?;
-                a.push(Element::UserDefined(String::from("\\vspace*{\\baselineskip}")));
+                a.push(Element::UserDefined(String::from(
+                    "\\vspace*{\\baselineskip}",
+                )));
                 a.push_doc(&b?);
                 Ok(a)
             })
-            .unwrap_or(Err(format!("An error occurred while rendering professional experience to LaTeX.")))?;
+            .unwrap_or(Err(format!(
+                "An error occurred while rendering professional experience to LaTeX."
+            )))?;
         doc.push_doc(&reduced);
 
         Ok(doc)
@@ -157,20 +196,32 @@ impl Renderer<Vec<ProfessionalExperience>, Document> for PdfRenderer {
 }
 
 impl Renderer<ProfessionalExperience, Document> for PdfRenderer {
-    fn render(self: &Self, element: &ProfessionalExperience, _config: &Config) -> Result<Document, String> {
+    fn render(
+        self: &Self,
+        element: &ProfessionalExperience,
+        _config: &Config,
+    ) -> Result<Document, String> {
         let mut doc = Document::default();
-        doc.push(Element::UserDefined(format!("{{\\bf {}}} \\hfill {}\n", element.organization, element.location)));
-        doc.push(Element::UserDefined(format!("\\emph{{{}}} \\hfill {}\n",
-                                              element.position,
-                                              time_range_string(&element.start, &element.end))));
+        doc.push(Element::UserDefined(format!(
+            "{{\\bf {}}} \\hfill {}\n",
+            element.organization, element.location
+        )));
+        doc.push(Element::UserDefined(format!(
+            "\\emph{{{}}} \\hfill {}\n",
+            element.position,
+            time_range_string(&element.start, &element.end)
+        )));
         let mut itemize_content = vec![String::from("\\setlength\\itemsep{-0.05in}")];
-        let mut exp = element.experience.iter()
-            .map(|e| {
-                format!("\\item {}", e)
-            })
+        let mut exp = element
+            .experience
+            .iter()
+            .map(|e| format!("\\item {}", e))
             .collect::<Vec<String>>();
         itemize_content.append(exp.borrow_mut());
-        doc.push(Element::Environment(String::from("itemize"), itemize_content));
+        doc.push(Element::Environment(
+            String::from("itemize"),
+            itemize_content,
+        ));
         Ok(doc)
     }
 }
@@ -194,13 +245,16 @@ impl Renderer<OtherExperience, Document> for PdfRenderer {
         // doc.push_doc(&itemize_content);
 
         let mut itemize_content = vec![String::from("\\setlength\\itemsep{-0.05in}")];
-        let mut projects = element.projects.iter()
-            .map(|e| {
-                self.render(e, config).unwrap_or_default()
-            })
+        let mut projects = element
+            .projects
+            .iter()
+            .map(|e| self.render(e, config).unwrap_or_default())
             .collect::<Vec<String>>();
         itemize_content.append(projects.borrow_mut());
-        doc.push(Element::Environment(String::from("itemize"), itemize_content));
+        doc.push(Element::Environment(
+            String::from("itemize"),
+            itemize_content,
+        ));
 
         Ok(doc)
     }
@@ -218,7 +272,10 @@ impl Renderer<Technologies, Document> for PdfRenderer {
         doc.push_doc(&section_header("TECHNOLOGIES"));
         let technologies = element.technologies.join(", ");
         let technologies = escape_special_chars(&technologies);
-        doc.push(Element::Environment(String::from("center"), vec![technologies]));
+        doc.push(Element::Environment(
+            String::from("center"),
+            vec![technologies],
+        ));
         Ok(doc)
     }
 }
@@ -227,26 +284,34 @@ impl Renderer<Education, Document> for PdfRenderer {
     fn render(self: &Self, element: &Education, _config: &Config) -> Result<Document, String> {
         let mut doc = Document::default();
         doc.push_doc(&section_header("UNIVERSITY"));
-        doc.push(Element::UserDefined(format!("{{\\bf {}}} \\hfill {}\n", element.school, element.location)));
-        doc.push(Element::UserDefined(format!("\\emph{{{}}} \\hfill {}\n", element.major, element.graduation)));
+        doc.push(Element::UserDefined(format!(
+            "{{\\bf {}}} \\hfill {}\n",
+            element.school, element.location
+        )));
+        doc.push(Element::UserDefined(format!(
+            "\\emph{{{}}} \\hfill {}\n",
+            element.major, element.graduation
+        )));
         Ok(doc)
     }
 }
 
 fn vspace() -> Document {
     let mut doc = Document::default();
-    doc.push(Element::UserDefined(String::from("\\vspace*{\\baselineskip}")));
+    doc.push(Element::UserDefined(String::from(
+        "\\vspace*{\\baselineskip}",
+    )));
     doc
 }
 
 fn section_header(header: &str) -> Document {
     let mut doc = Document::default();
-    doc.push(Element::Environment(String::from("center"),
-                                      vec![format!("{{\\bf {}}}", header)]));
+    doc.push(Element::Environment(
+        String::from("center"),
+        vec![format!("{{\\bf {}}}", header)],
+    ));
     doc
 }
 
 #[cfg(test)]
-mod test {
-
-}
+mod test {}
