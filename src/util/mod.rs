@@ -16,8 +16,7 @@ pub fn toml_from_string<'de, T>(x: &'de str) -> Result<T, String>
 where
     T: Deserialize<'de>,
 {
-    toml::from_str::<'de, T>(&*x)
-        .map_err(|e| format!("An error occurred while parsing toml: {}", e))
+    toml::from_str::<'de, T>(&x).map_err(|e| format!("An error occurred while parsing toml: {}", e))
 }
 
 pub fn get_path(dir: Option<&String>, file_name: &str, extension: Option<&String>) -> PathBuf {
