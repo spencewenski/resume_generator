@@ -63,6 +63,7 @@ impl Renderer<PersonalInfo, String> for GitHubRenderer {
     fn render(self: &Self, element: &PersonalInfo, config: &Config) -> Result<String, String> {
         let info = self.md.render(element, config)?;
         // Don't want to display email or linkedin on GitHub
+        // todo: enable configuring what to display in the toml
         // todo: is there a way to do this without using 'to_owned'?
         let info = info
             .split("\n")

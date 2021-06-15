@@ -187,7 +187,6 @@ impl Renderer<Technologies, String> for TextRenderer {
         );
         let technologies = technologies
             .split("\n")
-            .into_iter()
             .map(|x| centered_string(x, config.format_config.text_config.width))
             .collect::<Vec<String>>()
             .join("\n");
