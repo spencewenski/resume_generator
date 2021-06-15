@@ -1,0 +1,8 @@
+[text_config]
+width = 25
+
+[pdf_config]
+margin = "0.8in"
+
+[markdown_config]
+width = 30

@@ -1,6 +1,5 @@
 use crate::config::arguments::Arguments;
 use crate::config::format_config::FormatConfig;
-use crate::util::{string_from_file, toml_from_string};
 
 pub mod arguments;
 pub mod format_config;
@@ -16,8 +15,7 @@ impl Config {
         let args = Arguments::parse_args();
 
         let format_config = if let Some(file_name) = &args.format_config {
-            let input = string_from_file(file_name)?;
-            toml_from_string(&*input)?
+            FormatConfig::read_from_config_file(file_name)?
         } else {
             Default::default()
         };
