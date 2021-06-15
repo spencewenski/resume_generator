@@ -51,12 +51,11 @@ impl Renderer<Resume, String> for TextRenderer {
         if let Some(e) = &element.education {
             text = format!("{}\n\n{}", text, self.render(e, config)?);
         }
-        text = format!(
-            "{}\n\n{footer:^width$}\n",
-            text,
-            footer = FooterText::new().basic_text,
-            width = config.format_config.text_config.width
+        let footer = centered_string(
+            &FooterText::new().basic_text,
+            config.format_config.text_config.width,
         );
+        text = format!("{}\n\n{}", text, footer);
         Ok(text)
     }
 }
@@ -90,11 +89,7 @@ impl Renderer<Vec<ProfessionalExperience>, String> for TextRenderer {
         element: &Vec<ProfessionalExperience>,
         config: &Config,
     ) -> Result<String, String> {
-        let mut text = format!(
-            "{header:^width$}",
-            header = "EXPERIENCE",
-            width = config.format_config.text_config.width
-        );
+        let mut text = centered_string("EXPERIENCE", config.format_config.text_config.width);
 
         let exp = element
             .iter()
@@ -183,8 +178,19 @@ impl Renderer<ProjectInfo, String> for TextRenderer {
 impl Renderer<Technologies, String> for TextRenderer {
     fn render(self: &Self, element: &Technologies, config: &Config) -> Result<String, String> {
         let header = centered_string("TECHNOLOGIES", config.format_config.text_config.width);
-        let mut technologies = element.technologies.join(", ");
-        technologies = centered_string(&technologies, config.format_config.text_config.width);
+        let technologies = element.technologies.join(", ");
+        let technologies = split_string_across_lines(
+            &technologies,
+            config.format_config.text_config.width,
+            None,
+            None,
+        );
+        let technologies = technologies
+            .split("\n")
+            .into_iter()
+            .map(|x| centered_string(x, config.format_config.text_config.width))
+            .collect::<Vec<String>>()
+            .join("\n");
         Ok(format!("{}\n{}", header, technologies))
     }
 }
@@ -215,7 +221,7 @@ impl Renderer<Education, String> for TextRenderer {
 }
 
 fn centered_string(s: &str, width: usize) -> String {
-    format!("{s:^width$}", s = s, width = width)
+    format!("{s:>width$}", s = s, width = (width / 2) + (s.len() / 2))
 }
 
 fn right_and_left_aligned(l: &str, r: &str, width: usize) -> String {
@@ -231,32 +237,179 @@ fn right_and_left_aligned(l: &str, r: &str, width: usize) -> String {
 mod test {
     use crate::config::format_config::{FormatConfig, TextConfig};
     use crate::config::Config;
-    use crate::data::PersonalInfo;
+    use crate::data::{
+        Education, Objective, OtherExperience, PersonalInfo, ProfessionalExperience, ProjectInfo,
+        Technologies,
+    };
     use crate::renderer::text_renderer::TextRenderer;
     use crate::renderer::Renderer;
 
     #[test]
-    fn test_text_renderer() {}
-
-    #[test]
-    fn test_personal_info_text_renderer() {
-        let personal_info = PersonalInfo {
+    fn test_personal_info() {
+        let x = PersonalInfo {
             email: String::from("foo@bar.com"),
             github: String::from("github.com/foo"),
             ..Default::default()
         };
-        let config = Config {
-            format_config: FormatConfig {
-                text_config: TextConfig { width: 50 },
-                ..Default::default()
-            },
-            ..Default::default()
-        };
-        let rendered: String = TextRenderer::new().render(&personal_info, &config).unwrap();
+        let rendered = TextRenderer::new().render(&x, &get_config()).unwrap();
 
         assert_eq!(
             rendered,
             "github.com/foo                         foo@bar.com"
         );
+    }
+
+    #[test]
+    fn test_objective() {
+        let x = Objective {
+            objective: String::from("Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut"),
+        };
+        let rendered = TextRenderer::new().render(&x, &get_config()).unwrap();
+
+        assert_eq!(rendered, "Lorem ipsum dolor sit amet, consectetur adipiscing\nelit, sed do eiusmod tempor incididunt ut");
+    }
+
+    #[test]
+    fn test_professional_experience() {
+        let a = ProfessionalExperience {
+            organization: String::from("organizationA"),
+            position: String::from("positionA"),
+            location: String::from("locationA"),
+            start: String::from("startA"),
+            end: String::from("endA"),
+            experience: vec![
+                String::from("experienceA1"),
+                String::from("experienceA2"),
+                String::from("experienceA3"),
+            ],
+        };
+        let b = ProfessionalExperience {
+            organization: String::from("organizationB"),
+            position: String::from("positionB"),
+            location: String::from("locationB"),
+            start: String::from("startB"),
+            end: String::from("endB"),
+            experience: vec![
+                String::from("experienceB1"),
+                String::from("Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut"),
+                String::from("experienceB3"),
+            ],
+        };
+        let x = vec![a, b];
+
+        let rendered = TextRenderer::new().render(&x, &get_config()).unwrap();
+
+        assert_eq!(
+            rendered,
+            "                    EXPERIENCE
+organizationA                            locationA
+positionA                            startA - endA
+- experienceA1
+- experienceA2
+- experienceA3
+
+organizationB                            locationB
+positionB                            startB - endB
+- experienceB1
+- Lorem ipsum dolor sit amet, consectetur
+  adipiscing elit, sed do eiusmod tempor
+  incididunt ut
+- experienceB3"
+        );
+    }
+
+    #[test]
+    fn test_other_experience() {
+        let a = ProjectInfo {
+            project_name: String::from("project_nameA"),
+            description: String::from("descriptionA"),
+            url: String::from("example.com"),
+        };
+        let b = ProjectInfo {
+            project_name: String::from("project_nameB"),
+            description: String::from("Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut"),
+            url: String::from("example.com"),
+        };
+        let c = ProjectInfo {
+            project_name: String::from("project_nameC"),
+            description: String::from("descriptionC"),
+            url: String::from("example.com"),
+        };
+        let x = OtherExperience {
+            projects: vec![a, b, c],
+        };
+
+        let rendered = TextRenderer::new().render(&x, &get_config()).unwrap();
+
+        assert_eq!(
+            rendered,
+            "                     PROJECTS
+- descriptionA
+- Lorem ipsum dolor sit amet, consectetur
+  adipiscing elit, sed do eiusmod tempor
+  incididunt ut
+- descriptionC"
+        );
+    }
+
+    #[test]
+    fn test_technologies() {
+        let tech = vec![
+            String::from("Lorem"),
+            String::from("ipsum"),
+            String::from("dolor"),
+            String::from("sit"),
+            String::from("amet"),
+            String::from("consectetur"),
+            String::from("adipiscing"),
+            String::from("elit"),
+            String::from("sed"),
+            String::from("do"),
+            String::from("eiusmod"),
+            String::from("tempor"),
+            String::from("incididunt"),
+        ];
+
+        let x = Technologies { technologies: tech };
+
+        let rendered = TextRenderer::new().render(&x, &get_config()).unwrap();
+
+        assert_eq!(
+            rendered,
+            "                   TECHNOLOGIES
+   Lorem, ipsum, dolor, sit, amet, consectetur,
+   adipiscing, elit, sed, do, eiusmod, tempor,
+                    incididunt"
+        )
+    }
+
+    #[test]
+    fn test_education() {
+        let x = Education {
+            school: String::from("school"),
+            location: String::from("location"),
+            major: String::from("major"),
+            graduation: String::from("graduation"),
+            ..Default::default()
+        };
+
+        let rendered = TextRenderer::new().render(&x, &get_config()).unwrap();
+
+        assert_eq!(
+            rendered,
+            "                    UNIVERSITY
+school                                    location
+major                                   graduation"
+        );
+    }
+
+    fn get_config() -> Config {
+        Config {
+            format_config: FormatConfig {
+                text_config: TextConfig { width: 50 },
+                ..Default::default()
+            },
+            ..Default::default()
+        }
     }
 }

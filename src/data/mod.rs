@@ -4,6 +4,7 @@ mod parser;
 
 impl Resume {
     pub fn read_from_config_file(file_name: &str) -> Result<Resume, String> {
+        // todo: support other config file formats?
         TomlParser::parse(file_name)
     }
 }
@@ -24,6 +25,7 @@ pub struct Resume {
 
 #[derive(Debug, Serialize, Deserialize, Default)]
 pub struct PersonalInfo {
+    // todo: use the first to elements of a vector as the left/right items in the header
     pub email: String,
     pub github: String,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -76,20 +78,4 @@ pub struct ProjectInfo {
 #[derive(Debug, Serialize, Deserialize, Default)]
 pub struct Technologies {
     pub technologies: Vec<String>,
-}
-
-#[cfg(test)]
-mod tests {
-    use crate::data::PersonalInfo;
-
-    #[test]
-    fn test_personal_info() {
-        let personal_info = PersonalInfo {
-            email: String::from("foo@example.com"),
-            github: String::from("github.com/foo"),
-            ..Default::default()
-        };
-
-        assert_eq!(personal_info.email, String::from("foo@example.com"));
-    }
 }

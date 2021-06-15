@@ -87,6 +87,7 @@ impl FooterText {
             month = now.format("%B"),
             year = now.year()
         );
+        // todo: make this url configurable somehow
         let url = String::from("github.com/spencewenski/resume_generator");
         let basic_text = format!("{} {}", prefix, url);
         FooterText {
@@ -143,7 +144,95 @@ pub fn split_string_across_lines(
 
 #[cfg(test)]
 mod test {
-    use crate::util::split_string_across_lines;
+    use crate::util::{
+        add_https_to_url, escape_special_chars, get_path, split_string_across_lines,
+        string_from_file, time_range_string, toml_from_string, FooterText,
+    };
+    use chrono::{Datelike, Local};
+
+    #[test]
+    fn test_string_from_file() {
+        let s = string_from_file("tst/test_read_file_to_string.txt").unwrap();
+        assert_eq!(s, "foo\nbar\nbaz\n");
+    }
+
+    #[test]
+    fn test_string_from_file_does_not_exist() {
+        let s = string_from_file("tst/does_not_exist.txt");
+        assert!(s.is_err());
+    }
+
+    #[derive(Debug, Serialize, Deserialize, Default)]
+    pub struct TestToml {
+        pub foo: String,
+        pub baz: Baz,
+    }
+
+    #[derive(Debug, Serialize, Deserialize, Default)]
+    pub struct Baz {
+        pub things: String,
+    }
+
+    #[test]
+    fn test_toml_from_string() {
+        let s = string_from_file("tst/test_simple_toml.toml").unwrap();
+        let t: TestToml = toml_from_string(&*s).unwrap();
+
+        assert_eq!(t.foo, String::from("bar"));
+        assert_eq!(t.baz.things, String::from("stuff"));
+    }
+
+    #[test]
+    fn test_get_path() {
+        let p = get_path(None, "foo", None);
+        assert_eq!(p.as_os_str(), "./foo");
+
+        let dir = Some(String::from("./foo"));
+        let p = get_path(dir.as_ref(), "bar", None);
+        assert_eq!(p.as_os_str(), "./foo/bar");
+
+        let ext = Some(String::from("baz"));
+        let p = get_path(dir.as_ref(), "bar", ext.as_ref());
+        assert_eq!(p.as_os_str(), "./foo/bar.baz");
+    }
+
+    #[test]
+    fn test_add_https_to_url() {
+        let url = add_https_to_url("example.com");
+        assert_eq!(url, "https://example.com");
+
+        let url = add_https_to_url("https://example.com");
+        assert_eq!(url, "https://example.com");
+    }
+
+    #[test]
+    fn test_time_range_string() {
+        let s = time_range_string("foo", "bar");
+        assert_eq!(s, "foo - bar");
+    }
+
+    #[test]
+    fn test_footer_text() {
+        let f = FooterText::new();
+        assert_eq!(f.url, "github.com/spencewenski/resume_generator");
+        let now = Local::now();
+        let prefix = format!(
+            "Generated on {day} {month} {year} using",
+            day = now.day(),
+            month = now.format("%B"),
+            year = now.year()
+        );
+        assert_eq!(f.prefix, prefix);
+        assert_eq!(f.basic_text, format!("{} {}", prefix, f.url));
+    }
+
+    #[test]
+    fn test_escape_special_chars() {
+        // '\\', '&', '%', '$', '#', '_', '{', '}', '~', '^'
+        let input = "\\ & % $ # _ { } ~ ^";
+        let output = escape_special_chars(input);
+        assert_eq!(output, "\\\\ \\& \\% \\$ \\# \\_ \\{ \\} \\~ \\^");
+    }
 
     #[test]
     fn test_split_string_across_lines() {
@@ -159,5 +248,14 @@ mod test {
         let s = split_string_across_lines(s, 12, None, Some(String::from("  ")));
 
         assert_eq!(s, "Foo bar baz\n  things and\n  stuff.");
+    }
+
+    #[test]
+    fn test_split_string_across_lines_with_first_line_prefix() {
+        let s = "Foo bar baz things and stuff.";
+        let s =
+            split_string_across_lines(s, 20, Some(String::from("- ")), Some(String::from("  ")));
+
+        assert_eq!(s, "- Foo bar baz things\n  and stuff.");
     }
 }

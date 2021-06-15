@@ -230,19 +230,6 @@ impl Renderer<OtherExperience, Document> for PdfRenderer {
     fn render(self: &Self, element: &OtherExperience, config: &Config) -> Result<Document, String> {
         let mut doc = Document::default();
         doc.push_doc(&section_header("PROJECTS"));
-        // todo: clean up?
-        // let mut itemize_content = vec![String::from("\\setlength\\itemsep{-0.05in}")];
-        // let mut projects = element.projects.iter()
-        //     .map(|p| {
-        //         self.render(p, config)
-        //     })
-        //     .reduce(|a, b| {
-        //         let mut a = a?;
-        //         a.push_doc(&b?);
-        //         Ok(a)
-        //     }).unwrap_or(Err(format!("An error occurred while rendering other experience to LaTeX.")))?;
-        // itemize_content.append(projects.borrow_mut());
-        // doc.push_doc(&itemize_content);
 
         let mut itemize_content = vec![String::from("\\setlength\\itemsep{-0.05in}")];
         let mut projects = element
@@ -314,4 +301,169 @@ fn section_header(header: &str) -> Document {
 }
 
 #[cfg(test)]
-mod test {}
+mod test {
+    use crate::config::format_config::{FormatConfig, TextConfig};
+    use crate::config::Config;
+    use crate::data::{
+        Education, Objective, OtherExperience, PersonalInfo, ProfessionalExperience, ProjectInfo,
+        Technologies,
+    };
+    use crate::renderer::pdf_renderer::PdfRenderer;
+    use crate::renderer::Renderer;
+    use latex::print;
+
+    #[test]
+    fn test_text_renderer() {}
+
+    #[test]
+    fn test_personal_info() {
+        let x = PersonalInfo {
+            email: String::from("foo@bar.com"),
+            github: String::from("github.com/foo"),
+            ..Default::default()
+        };
+        let rendered = PdfRenderer::new().render(&x, &get_config()).unwrap();
+        let rendered = print(&rendered).unwrap();
+
+        assert_eq!(
+            rendered,
+            "\\documentclass{article}\n\\begin{document}\ngithub.com/foo \\hfill foo@bar.com\n\\rule{\\textwidth}{0.4pt}\n\\end{document}\n"
+        );
+    }
+
+    #[test]
+    fn test_objective() {
+        let x = Objective {
+                objective: String::from("Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut"),
+            };
+        let rendered = PdfRenderer::new().render(&x, &get_config()).unwrap();
+        let rendered = print(&rendered).unwrap();
+
+        assert_eq!(rendered, "\\documentclass{article}\n\\begin{document}\nLorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut\n\\end{document}\n");
+    }
+
+    #[test]
+    fn test_professional_experience() {
+        let a = ProfessionalExperience {
+            organization: String::from("organizationA"),
+            position: String::from("positionA"),
+            location: String::from("locationA"),
+            start: String::from("startA"),
+            end: String::from("endA"),
+            experience: vec![
+                String::from("experienceA1"),
+                String::from("experienceA2"),
+                String::from("experienceA3"),
+            ],
+        };
+        let b = ProfessionalExperience {
+                organization: String::from("organizationB"),
+                position: String::from("positionB"),
+                location: String::from("locationB"),
+                start: String::from("startB"),
+                end: String::from("endB"),
+                experience: vec![
+                    String::from("experienceB1"),
+                    String::from("Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut"),
+                    String::from("experienceB3"),
+                ],
+            };
+        let x = vec![a, b];
+
+        let rendered = PdfRenderer::new().render(&x, &get_config()).unwrap();
+        let rendered = print(&rendered).unwrap();
+
+        assert_eq!(
+            rendered,
+            "\\documentclass{article}\n\\begin{document}\n\\begin{center}\n{\\bf EXPERIENCE}\n\\end{center}\n{\\bf organizationA} \\hfill locationA\n\n\\emph{positionA} \\hfill startA - endA\n\n\\begin{itemize}\n\\setlength\\itemsep{-0.05in}\n\\item experienceA1\n\\item experienceA2\n\\item experienceA3\n\\end{itemize}\n\\vspace*{\\baselineskip}\n{\\bf organizationB} \\hfill locationB\n\n\\emph{positionB} \\hfill startB - endB\n\n\\begin{itemize}\n\\setlength\\itemsep{-0.05in}\n\\item experienceB1\n\\item Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut\n\\item experienceB3\n\\end{itemize}\n\\end{document}\n"
+        );
+    }
+
+    #[test]
+    fn test_other_experience() {
+        let a = ProjectInfo {
+            project_name: String::from("project_nameA"),
+            description: String::from("descriptionA"),
+            url: String::from("example.com"),
+        };
+        let b = ProjectInfo {
+                project_name: String::from("project_nameB"),
+                description: String::from("Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut"),
+                url: String::from("example.com"),
+            };
+        let c = ProjectInfo {
+            project_name: String::from("project_nameC"),
+            description: String::from("descriptionC"),
+            url: String::from("example.com"),
+        };
+        let x = OtherExperience {
+            projects: vec![a, b, c],
+        };
+
+        let rendered = PdfRenderer::new().render(&x, &get_config()).unwrap();
+        let rendered = print(&rendered).unwrap();
+
+        assert_eq!(
+            rendered,
+            "\\documentclass{article}\n\\begin{document}\n\\begin{center}\n{\\bf PROJECTS}\n\\end{center}\n\\begin{itemize}\n\\setlength\\itemsep{-0.05in}\n\\item descriptionA\n\n\\item Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut\n\n\\item descriptionC\n\n\\end{itemize}\n\\end{document}\n"
+        );
+    }
+
+    #[test]
+    fn test_technologies() {
+        let tech = vec![
+            String::from("Lorem"),
+            String::from("ipsum"),
+            String::from("dolor"),
+            String::from("sit"),
+            String::from("amet"),
+            String::from("consectetur"),
+            String::from("adipiscing"),
+            String::from("elit"),
+            String::from("sed"),
+            String::from("do"),
+            String::from("eiusmod"),
+            String::from("tempor"),
+            String::from("incididunt"),
+        ];
+
+        let x = Technologies { technologies: tech };
+
+        let rendered = PdfRenderer::new().render(&x, &get_config()).unwrap();
+        let rendered = print(&rendered).unwrap();
+
+        assert_eq!(
+            rendered,
+            "\\documentclass{article}\n\\begin{document}\n\\begin{center}\n{\\bf TECHNOLOGIES}\n\\end{center}\n\\begin{center}\nLorem, ipsum, dolor, sit, amet, consectetur, adipiscing, elit, sed, do, eiusmod, tempor, incididunt\n\\end{center}\n\\end{document}\n"
+        )
+    }
+
+    #[test]
+    fn test_education() {
+        let x = Education {
+            school: String::from("school"),
+            location: String::from("location"),
+            major: String::from("major"),
+            graduation: String::from("graduation"),
+            ..Default::default()
+        };
+
+        let rendered = PdfRenderer::new().render(&x, &get_config()).unwrap();
+        let rendered = print(&rendered).unwrap();
+
+        assert_eq!(
+            rendered,
+            "\\documentclass{article}\n\\begin{document}\n\\begin{center}\n{\\bf UNIVERSITY}\n\\end{center}\n{\\bf school} \\hfill location\n\n\\emph{major} \\hfill graduation\n\n\\end{document}\n"
+        );
+    }
+
+    fn get_config() -> Config {
+        Config {
+            format_config: FormatConfig {
+                text_config: TextConfig { width: 50 },
+                ..Default::default()
+            },
+            ..Default::default()
+        }
+    }
+}

@@ -92,3 +92,114 @@ impl Renderer<Technologies, String> for GitHubRenderer {
         self.md.render(element, config)
     }
 }
+
+#[cfg(test)]
+mod test {
+    use crate::config::format_config::{FormatConfig, TextConfig};
+    use crate::config::Config;
+    use crate::data::{
+        Objective, OtherExperience, OtherPersonalInfo, PersonalInfo, ProjectInfo, Technologies,
+    };
+    use crate::renderer::github_renderer::GitHubRenderer;
+    use crate::renderer::Renderer;
+
+    #[test]
+    fn test_personal_info() {
+        let a = OtherPersonalInfo {
+            item: String::from("Foo"),
+            url: Some(String::from("example.com/foo")),
+        };
+        let b = OtherPersonalInfo {
+            item: String::from("Bar"),
+            url: Some(String::from("example.com/bar")),
+        };
+        let x = PersonalInfo {
+            email: String::from("foo@bar.com"),
+            github: String::from("github.com/foo"),
+            other: Some(vec![a, b]),
+        };
+        let rendered = GitHubRenderer::new().render(&x, &get_config()).unwrap();
+
+        assert_eq!(
+            rendered,
+            "## Links and Contact Info\n- GitHub: [github.com/foo](https://github.com/foo)\n- Foo: [example.com/foo](https://example.com/foo)\n- Bar: [example.com/bar](https://example.com/bar)"
+        );
+    }
+
+    #[test]
+    fn test_objective() {
+        let x = Objective {
+            objective: String::from("Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut"),
+        };
+        let rendered = GitHubRenderer::new().render(&x, &get_config()).unwrap();
+
+        assert_eq!(rendered, "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut");
+    }
+
+    #[test]
+    fn test_other_experience() {
+        let a = ProjectInfo {
+            project_name: String::from("project_nameA"),
+            description: String::from("descriptionA"),
+            url: String::from("example.com"),
+        };
+        let b = ProjectInfo {
+            project_name: String::from("project_nameB"),
+            description: String::from("Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut"),
+            url: String::from("example.com"),
+        };
+        let c = ProjectInfo {
+            project_name: String::from("project_nameC"),
+            description: String::from("descriptionC"),
+            url: String::from("example.com"),
+        };
+        let x = OtherExperience {
+            projects: vec![a, b, c],
+        };
+
+        let rendered = GitHubRenderer::new().render(&x, &get_config()).unwrap();
+
+        assert_eq!(
+            rendered,
+            "## Projects\n- [project_nameA](https://example.com) - descriptionA\n- [project_nameB](https://example.com) - Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor\n  incididunt ut\n- [project_nameC](https://example.com) - descriptionC"
+        );
+    }
+
+    #[test]
+    fn test_technologies() {
+        let tech = vec![
+            String::from("Lorem"),
+            String::from("ipsum"),
+            String::from("dolor"),
+            String::from("sit"),
+            String::from("amet"),
+            String::from("consectetur"),
+            String::from("adipiscing"),
+            String::from("elit"),
+            String::from("sed"),
+            String::from("do"),
+            String::from("eiusmod"),
+            String::from("tempor"),
+            String::from("incididunt"),
+        ];
+
+        let x = Technologies { technologies: tech };
+
+        let rendered = GitHubRenderer::new().render(&x, &get_config()).unwrap();
+
+        assert_eq!(
+            rendered,
+            "## Technologies\nLorem, ipsum, dolor, sit, amet, consectetur, adipiscing, elit, sed, do, eiusmod, tempor, incididunt"
+        )
+    }
+
+    fn get_config() -> Config {
+        Config {
+            format_config: FormatConfig {
+                text_config: TextConfig { width: 50 },
+                ..Default::default()
+            },
+            ..Default::default()
+        }
+    }
+}

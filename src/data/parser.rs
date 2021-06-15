@@ -10,7 +10,7 @@ pub struct TomlParser;
 impl Parser for TomlParser {
     fn parse(file_name: &str) -> Result<Resume, String> {
         let input = string_from_file(file_name)?;
-        toml_from_string(&*input)
+        toml_from_string(&input)
     }
 }
 

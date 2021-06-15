@@ -254,4 +254,167 @@ impl Renderer<Education, String> for MarkdownRenderer {
 }
 
 #[cfg(test)]
-mod test {}
+mod test {
+    use crate::config::format_config::{FormatConfig, TextConfig};
+    use crate::config::Config;
+    use crate::data::{
+        Education, Objective, OtherExperience, OtherPersonalInfo, PersonalInfo,
+        ProfessionalExperience, ProjectInfo, Technologies,
+    };
+    use crate::renderer::markdown_renderer::MarkdownRenderer;
+    use crate::renderer::Renderer;
+
+    #[test]
+    fn test_personal_info() {
+        let a = OtherPersonalInfo {
+            item: String::from("Foo"),
+            url: Some(String::from("example.com/foo")),
+        };
+        let b = OtherPersonalInfo {
+            item: String::from("Bar"),
+            url: Some(String::from("example.com/bar")),
+        };
+        let x = PersonalInfo {
+            email: String::from("foo@bar.com"),
+            github: String::from("github.com/foo"),
+            other: Some(vec![a, b]),
+        };
+        let rendered = MarkdownRenderer::new().render(&x, &get_config()).unwrap();
+
+        assert_eq!(
+            rendered,
+            "## Links and Contact Info\n- Email: [foo@bar.com](mailto:foo@bar.com)\n- GitHub: [github.com/foo](https://github.com/foo)\n- Foo: [example.com/foo](https://example.com/foo)\n- Bar: [example.com/bar](https://example.com/bar)"
+        );
+    }
+
+    #[test]
+    fn test_objective() {
+        let x = Objective {
+            objective: String::from("Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut"),
+        };
+        let rendered = MarkdownRenderer::new().render(&x, &get_config()).unwrap();
+
+        assert_eq!(rendered, "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut");
+    }
+
+    #[test]
+    fn test_professional_experience() {
+        let a = ProfessionalExperience {
+            organization: String::from("organizationA"),
+            position: String::from("positionA"),
+            location: String::from("locationA"),
+            start: String::from("startA"),
+            end: String::from("endA"),
+            experience: vec![
+                String::from("experienceA1"),
+                String::from("experienceA2"),
+                String::from("experienceA3"),
+            ],
+        };
+        let b = ProfessionalExperience {
+            organization: String::from("organizationB"),
+            position: String::from("positionB"),
+            location: String::from("locationB"),
+            start: String::from("startB"),
+            end: String::from("endB"),
+            experience: vec![
+                String::from("experienceB1"),
+                String::from("Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut"),
+                String::from("experienceB3"),
+            ],
+        };
+        let x = vec![a, b];
+
+        let rendered = MarkdownRenderer::new().render(&x, &get_config()).unwrap();
+
+        assert_eq!(
+            rendered,
+            "## Experience\n### organizationA\n```\npositionA\nstartA - endA\nlocationA\n```\n- experienceA1\n- experienceA2\n- experienceA3\n\n### organizationB\n```\npositionB\nstartB - endB\nlocationB\n```\n- experienceB1\n- Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut\n- experienceB3"
+        );
+    }
+
+    #[test]
+    fn test_other_experience() {
+        let a = ProjectInfo {
+            project_name: String::from("project_nameA"),
+            description: String::from("descriptionA"),
+            url: String::from("example.com"),
+        };
+        let b = ProjectInfo {
+            project_name: String::from("project_nameB"),
+            description: String::from("Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut"),
+            url: String::from("example.com"),
+        };
+        let c = ProjectInfo {
+            project_name: String::from("project_nameC"),
+            description: String::from("descriptionC"),
+            url: String::from("example.com"),
+        };
+        let x = OtherExperience {
+            projects: vec![a, b, c],
+        };
+
+        let rendered = MarkdownRenderer::new().render(&x, &get_config()).unwrap();
+
+        assert_eq!(
+            rendered,
+            "## Projects\n- [project_nameA](https://example.com) - descriptionA\n- [project_nameB](https://example.com) - Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor\n  incididunt ut\n- [project_nameC](https://example.com) - descriptionC"
+        );
+    }
+
+    #[test]
+    fn test_technologies() {
+        let tech = vec![
+            String::from("Lorem"),
+            String::from("ipsum"),
+            String::from("dolor"),
+            String::from("sit"),
+            String::from("amet"),
+            String::from("consectetur"),
+            String::from("adipiscing"),
+            String::from("elit"),
+            String::from("sed"),
+            String::from("do"),
+            String::from("eiusmod"),
+            String::from("tempor"),
+            String::from("incididunt"),
+        ];
+
+        let x = Technologies { technologies: tech };
+
+        let rendered = MarkdownRenderer::new().render(&x, &get_config()).unwrap();
+
+        assert_eq!(
+            rendered,
+            "## Technologies\nLorem, ipsum, dolor, sit, amet, consectetur, adipiscing, elit, sed, do, eiusmod, tempor, incididunt"
+        )
+    }
+
+    #[test]
+    fn test_education() {
+        let x = Education {
+            school: String::from("school"),
+            location: String::from("location"),
+            major: String::from("major"),
+            graduation: String::from("graduation"),
+            ..Default::default()
+        };
+
+        let rendered = MarkdownRenderer::new().render(&x, &get_config()).unwrap();
+
+        assert_eq!(
+            rendered,
+            "## University\n### school\n```\nmajor\ngraduation\nlocation\n```"
+        );
+    }
+
+    fn get_config() -> Config {
+        Config {
+            format_config: FormatConfig {
+                text_config: TextConfig { width: 50 },
+                ..Default::default()
+            },
+            ..Default::default()
+        }
+    }
+}

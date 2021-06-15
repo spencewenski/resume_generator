@@ -39,3 +39,16 @@ impl Default for MarkdownConfig {
         MarkdownConfig { width: 120 }
     }
 }
+
+#[cfg(test)]
+mod test {
+    use crate::config::format_config::FormatConfig;
+
+    #[test]
+    fn test_format_config_defaults() {
+        let c = FormatConfig::default();
+        assert_eq!(c.text_config.width, 100);
+        assert_eq!(c.pdf_config.margin, "0.75in");
+        assert_eq!(c.markdown_config.width, 120);
+    }
+}
