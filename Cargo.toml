@@ -12,3 +12,11 @@ serde_json = "1.0.*"
 argparse = "0.2.*"
 chrono = "0.4.*"
 latex = "0.3.*"
+
+[[bin]]
+name = "resume_generator"
+path = "./src/main.rs"
+
+[lib]
+name = "resume_generator"
+path = "./src/lib.rs"
