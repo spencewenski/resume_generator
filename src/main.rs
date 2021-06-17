@@ -5,9 +5,9 @@ use resume_generator::data::Resume;
 use resume_generator::renderer::render_resume;
 
 fn main() {
-    let r = Config::new_and_parse_args().and_then(|c| {
-        let resume = Resume::read_from_config_file(&c.args.resume_input)?;
-        render_resume(&resume, &c)
+    let r = Config::new_and_parse_args().and_then(|config| {
+        let resume = Resume::read_from_config_file(&config.args.resume_input, &config)?;
+        render_resume(&resume, &config)
     });
     if let Err(e) = r {
         println!();

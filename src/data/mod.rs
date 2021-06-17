@@ -1,10 +1,15 @@
+use crate::config::Config;
 use crate::util::{string_from_file, toml_from_string};
 
 impl Resume {
-    pub fn read_from_config_file(file_name: &str) -> Result<Resume, String> {
+    pub fn read_from_config_file(file_name: &str, config: &Config) -> Result<Resume, String> {
         let s = string_from_file(file_name)?;
         // todo: support other config file formats?
-        toml_from_string(&s)
+        let mut resume: Resume = toml_from_string(&s)?;
+        if let Some(email) = &config.args.email {
+            resume.personal_info.email = email.to_owned()
+        }
+        Ok(resume)
     }
 }
 
@@ -85,7 +90,8 @@ mod test {
 
     #[test]
     fn test_deserialize_toml() {
-        let resume = Resume::read_from_config_file("tst/test_resume.toml").unwrap();
+        let resume =
+            Resume::read_from_config_file("tst/test_resume.toml", &Default::default()).unwrap();
 
         assert_eq!(resume.name, "Foo Bar");
 

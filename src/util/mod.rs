@@ -81,7 +81,7 @@ impl FooterText {
     pub fn new() -> FooterText {
         let now = Local::now();
         let prefix = format!(
-            "Generated on {day} {month} {year} using",
+            "Updated on {day} {month} {year} using",
             day = now.day(),
             month = now.format("%B"),
             year = now.year()
@@ -216,7 +216,7 @@ mod test {
         assert_eq!(f.url, "github.com/spencewenski/resume_generator");
         let now = Local::now();
         let prefix = format!(
-            "Generated on {day} {month} {year} using",
+            "Updated on {day} {month} {year} using",
             day = now.day(),
             month = now.format("%B"),
             year = now.year()
