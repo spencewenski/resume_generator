@@ -165,13 +165,17 @@ impl Renderer<ProfessionalExperience, String> for MarkdownRenderer {
         element: &ProfessionalExperience,
         config: &Config,
     ) -> Result<String, String> {
-        let mut text = format!("### {}", element.organization);
+        let mut text =
+            if let (Some(org), Some(location)) = (&element.organization, &element.location) {
+                format!("### {} - {}", org, location)
+            } else {
+                String::new()
+            };
         text = format!(
-            "{}\n```\n{}\n{}\n{}\n```",
+            "{}\n```\n{}\n{}\n```",
             text,
             element.position,
-            time_range_string(&element.start, &element.end),
-            element.location
+            time_range_string(&element.start, &element.end)
         );
 
         let exp = element
@@ -300,9 +304,9 @@ mod test {
     #[test]
     fn test_professional_experience() {
         let a = ProfessionalExperience {
-            organization: String::from("organizationA"),
+            organization: Some(String::from("organizationA")),
             position: String::from("positionA"),
-            location: String::from("locationA"),
+            location: Some(String::from("locationA")),
             start: String::from("startA"),
             end: String::from("endA"),
             experience: vec![
@@ -312,9 +316,9 @@ mod test {
             ],
         };
         let b = ProfessionalExperience {
-            organization: String::from("organizationB"),
+            organization: Some(String::from("organizationB")),
             position: String::from("positionB"),
-            location: String::from("locationB"),
+            location: Some(String::from("locationB")),
             start: String::from("startB"),
             end: String::from("endB"),
             experience: vec![
@@ -329,7 +333,7 @@ mod test {
 
         assert_eq!(
             rendered,
-            "## Experience\n### organizationA\n```\npositionA\nstartA - endA\nlocationA\n```\n- experienceA1\n- experienceA2\n- experienceA3\n\n### organizationB\n```\npositionB\nstartB - endB\nlocationB\n```\n- experienceB1\n- Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut\n- experienceB3"
+            "## Experience\n### organizationA - locationA\n```\npositionA\nstartA - endA\n```\n- experienceA1\n- experienceA2\n- experienceA3\n\n### organizationB - locationB\n```\npositionB\nstartB - endB\n```\n- experienceB1\n- Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut\n- experienceB3"
         );
     }
 

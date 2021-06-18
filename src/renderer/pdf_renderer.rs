@@ -98,10 +98,10 @@ impl Renderer<Resume, Document> for PdfRenderer {
                 .push(PreambleElement::UserDefined(String::from(
                     r"\renewcommand{\headrulewidth}{0pt}",
                 )))
-                .push(PreambleElement::UserDefined(String::from(format!(
+                .push(PreambleElement::UserDefined(format!(
                     "\\cfoot{{{}}}",
                     escape_special_chars(&FooterText::new().basic_text)
-                ))));
+                )));
         }
 
         // Add the actual resume content
@@ -180,9 +180,6 @@ impl Renderer<Vec<ProfessionalExperience>, Document> for PdfRenderer {
             .map(|x| self.render(x, config))
             .reduce(|a, b| {
                 let mut a = a?;
-                a.push(Element::UserDefined(String::from(
-                    "\\vspace*{\\baselineskip}",
-                )));
                 a.push_doc(&b?);
                 Ok(a)
             })
@@ -202,15 +199,18 @@ impl Renderer<ProfessionalExperience, Document> for PdfRenderer {
         _config: &Config,
     ) -> Result<Document, String> {
         let mut doc = Document::default();
-        doc.push(Element::UserDefined(format!(
-            "{{\\bf {}}} \\hfill {}\n",
-            element.organization, element.location
-        )));
+        if let (Some(org), Some(location)) = (&element.organization, &element.location) {
+            doc.push(Element::UserDefined(format!(
+                "{{\\bf {}}} \\hfill {}\n",
+                org, location
+            )));
+        }
         doc.push(Element::UserDefined(format!(
             "\\emph{{{}}} \\hfill {}\n",
             element.position,
             time_range_string(&element.start, &element.end)
         )));
+        doc.push_doc(&par_skip_start());
         let mut itemize_content = vec![String::from("\\setlength\\itemsep{-0.05in}")];
         let mut exp = element
             .experience
@@ -222,6 +222,7 @@ impl Renderer<ProfessionalExperience, Document> for PdfRenderer {
             String::from("itemize"),
             itemize_content,
         ));
+        doc.push_doc(&par_skip_end());
         Ok(doc)
     }
 }
@@ -293,10 +294,32 @@ fn vspace() -> Document {
 
 fn section_header(header: &str) -> Document {
     let mut doc = Document::default();
+    doc.push_doc(&par_skip_start());
     doc.push(Element::Environment(
         String::from("center"),
         vec![format!("{{\\bf {}}}", header)],
     ));
+    doc.push_doc(&par_skip_end());
+    doc
+}
+
+const PAR_MOD: &'_ str = "0.1in";
+
+fn par_skip_start() -> Document {
+    let mut doc = Document::default();
+    doc.push(Element::UserDefined(format!(
+        "\\addtolength{{\\parskip}}{{ -{} }}",
+        PAR_MOD
+    )));
+    doc
+}
+
+fn par_skip_end() -> Document {
+    let mut doc = Document::default();
+    doc.push(Element::UserDefined(format!(
+        "\\addtolength{{\\parskip}}{{ {} }}",
+        PAR_MOD
+    )));
     doc
 }
 
@@ -345,9 +368,9 @@ mod test {
     #[test]
     fn test_professional_experience() {
         let a = ProfessionalExperience {
-            organization: String::from("organizationA"),
+            organization: Some(String::from("organizationA")),
             position: String::from("positionA"),
-            location: String::from("locationA"),
+            location: Some(String::from("locationA")),
             start: String::from("startA"),
             end: String::from("endA"),
             experience: vec![
@@ -357,9 +380,9 @@ mod test {
             ],
         };
         let b = ProfessionalExperience {
-                organization: String::from("organizationB"),
+                organization: Some(String::from("organizationB")),
                 position: String::from("positionB"),
-                location: String::from("locationB"),
+                location: Some(String::from("locationB")),
                 start: String::from("startB"),
                 end: String::from("endB"),
                 experience: vec![
@@ -375,7 +398,7 @@ mod test {
 
         assert_eq!(
             rendered,
-            "\\documentclass{article}\n\\begin{document}\n\\begin{center}\n{\\bf EXPERIENCE}\n\\end{center}\n{\\bf organizationA} \\hfill locationA\n\n\\emph{positionA} \\hfill startA - endA\n\n\\begin{itemize}\n\\setlength\\itemsep{-0.05in}\n\\item experienceA1\n\\item experienceA2\n\\item experienceA3\n\\end{itemize}\n\\vspace*{\\baselineskip}\n{\\bf organizationB} \\hfill locationB\n\n\\emph{positionB} \\hfill startB - endB\n\n\\begin{itemize}\n\\setlength\\itemsep{-0.05in}\n\\item experienceB1\n\\item Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut\n\\item experienceB3\n\\end{itemize}\n\\end{document}\n"
+            "\\documentclass{article}\n\\begin{document}\n\\addtolength{\\parskip}{ -0.1in }\n\\begin{center}\n{\\bf EXPERIENCE}\n\\end{center}\n\\addtolength{\\parskip}{ 0.1in }\n{\\bf organizationA} \\hfill locationA\n\n\\emph{positionA} \\hfill startA - endA\n\n\\addtolength{\\parskip}{ -0.1in }\n\\begin{itemize}\n\\setlength\\itemsep{-0.05in}\n\\item experienceA1\n\\item experienceA2\n\\item experienceA3\n\\end{itemize}\n\\addtolength{\\parskip}{ 0.1in }\n{\\bf organizationB} \\hfill locationB\n\n\\emph{positionB} \\hfill startB - endB\n\n\\addtolength{\\parskip}{ -0.1in }\n\\begin{itemize}\n\\setlength\\itemsep{-0.05in}\n\\item experienceB1\n\\item Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut\n\\item experienceB3\n\\end{itemize}\n\\addtolength{\\parskip}{ 0.1in }\n\\end{document}\n"
         );
     }
 
@@ -405,7 +428,7 @@ mod test {
 
         assert_eq!(
             rendered,
-            "\\documentclass{article}\n\\begin{document}\n\\begin{center}\n{\\bf PROJECTS}\n\\end{center}\n\\begin{itemize}\n\\setlength\\itemsep{-0.05in}\n\\item descriptionA\n\n\\item Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut\n\n\\item descriptionC\n\n\\end{itemize}\n\\end{document}\n"
+            "\\documentclass{article}\n\\begin{document}\n\\addtolength{\\parskip}{ -0.1in }\n\\begin{center}\n{\\bf PROJECTS}\n\\end{center}\n\\addtolength{\\parskip}{ 0.1in }\n\\begin{itemize}\n\\setlength\\itemsep{-0.05in}\n\\item descriptionA\n\n\\item Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut\n\n\\item descriptionC\n\n\\end{itemize}\n\\end{document}\n"
         );
     }
 
@@ -434,7 +457,7 @@ mod test {
 
         assert_eq!(
             rendered,
-            "\\documentclass{article}\n\\begin{document}\n\\begin{center}\n{\\bf TECHNOLOGIES}\n\\end{center}\n\\begin{center}\nLorem, ipsum, dolor, sit, amet, consectetur, adipiscing, elit, sed, do, eiusmod, tempor, incididunt\n\\end{center}\n\\end{document}\n"
+            "\\documentclass{article}\n\\begin{document}\n\\addtolength{\\parskip}{ -0.1in }\n\\begin{center}\n{\\bf TECHNOLOGIES}\n\\end{center}\n\\addtolength{\\parskip}{ 0.1in }\n\\begin{center}\nLorem, ipsum, dolor, sit, amet, consectetur, adipiscing, elit, sed, do, eiusmod, tempor, incididunt\n\\end{center}\n\\end{document}\n"
         )
     }
 
@@ -453,7 +476,7 @@ mod test {
 
         assert_eq!(
             rendered,
-            "\\documentclass{article}\n\\begin{document}\n\\begin{center}\n{\\bf UNIVERSITY}\n\\end{center}\n{\\bf school} \\hfill location\n\n\\emph{major} \\hfill graduation\n\n\\end{document}\n"
+            "\\documentclass{article}\n\\begin{document}\n\\addtolength{\\parskip}{ -0.1in }\n\\begin{center}\n{\\bf UNIVERSITY}\n\\end{center}\n\\addtolength{\\parskip}{ 0.1in }\n{\\bf school} \\hfill location\n\n\\emph{major} \\hfill graduation\n\n\\end{document}\n"
         );
     }
 

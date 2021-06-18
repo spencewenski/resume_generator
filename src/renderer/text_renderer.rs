@@ -111,13 +111,16 @@ impl Renderer<ProfessionalExperience, String> for TextRenderer {
         element: &ProfessionalExperience,
         config: &Config,
     ) -> Result<String, String> {
-        let mut text = right_and_left_aligned(
-            &element.organization,
-            &element.location,
-            config.format_config.text_config.width,
-        );
+        let mut text =
+            if let (Some(org), Some(location)) = (&element.organization, &element.location) {
+                let text =
+                    right_and_left_aligned(org, location, config.format_config.text_config.width);
+                format!("{}\n", text)
+            } else {
+                String::new()
+            };
         text = format!(
-            "{}\n{}",
+            "{}{}",
             text,
             right_and_left_aligned(
                 &element.position,
@@ -271,9 +274,9 @@ mod test {
     #[test]
     fn test_professional_experience() {
         let a = ProfessionalExperience {
-            organization: String::from("organizationA"),
+            organization: Some(String::from("organizationA")),
             position: String::from("positionA"),
-            location: String::from("locationA"),
+            location: Some(String::from("locationA")),
             start: String::from("startA"),
             end: String::from("endA"),
             experience: vec![
@@ -283,9 +286,9 @@ mod test {
             ],
         };
         let b = ProfessionalExperience {
-            organization: String::from("organizationB"),
+            organization: Some(String::from("organizationB")),
             position: String::from("positionB"),
-            location: String::from("locationB"),
+            location: Some(String::from("locationB")),
             start: String::from("startB"),
             end: String::from("endB"),
             experience: vec![

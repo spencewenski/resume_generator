@@ -49,8 +49,14 @@ pub struct Objective {
 
 #[derive(Debug, Serialize, Deserialize, Default)]
 pub struct ProfessionalExperience {
-    pub organization: String,
-    pub location: String,
+    /// This is allowed to be omitted so that experience with the same company
+    /// but at different levels can be combined under one company header.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub organization: Option<String>,
+    /// This is allowed to be omitted so that experience with the same company
+    /// but at different levels can be combined under one company header.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub location: Option<String>,
     pub position: String,
     pub start: String,
     pub end: String,
@@ -114,11 +120,11 @@ mod test {
         assert_eq!(resume.professional_experience.len(), 2);
         assert_eq!(
             resume.professional_experience[0].organization,
-            String::from("organizationA")
+            Some(String::from("organizationA"))
         );
         assert_eq!(
             resume.professional_experience[0].location,
-            String::from("locationA")
+            Some(String::from("locationA"))
         );
         assert_eq!(
             resume.professional_experience[0].position,
@@ -140,11 +146,11 @@ mod test {
 
         assert_eq!(
             resume.professional_experience[1].organization,
-            String::from("organizationB")
+            Some(String::from("organizationB"))
         );
         assert_eq!(
             resume.professional_experience[1].location,
-            String::from("locationB")
+            Some(String::from("locationB"))
         );
         assert_eq!(
             resume.professional_experience[1].position,
