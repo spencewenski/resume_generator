@@ -1,5 +1,6 @@
 use crate::config::Config;
 use crate::util::{string_from_file, toml_from_string};
+use std::collections::HashSet;
 
 impl Resume {
     pub fn read_from_config_file(file_name: &str, config: &Config) -> Result<Resume, String> {
@@ -9,7 +10,29 @@ impl Resume {
         if let Some(email) = &config.args.email {
             resume.personal_info.email = email.to_owned()
         }
+        Resume::verify(resume)
+    }
+
+    fn verify(resume: Resume) -> Result<Resume, String> {
+        if let Some(tech) = &resume.technologies {
+            Resume::verify_technologies(tech)?;
+        }
         Ok(resume)
+    }
+
+    fn verify_technologies(tech: &Technologies) -> Result<(), String> {
+        let mut tech_set = HashSet::new();
+        for t in tech.technologies.iter() {
+            if tech_set.contains(t) {
+                return Err(format!(
+                    "Technologies list contains a duplicate entry: {}",
+                    t
+                ));
+            } else {
+                tech_set.insert(t);
+            }
+        }
+        Ok(())
     }
 }
 
@@ -92,7 +115,7 @@ pub struct Technologies {
 
 #[cfg(test)]
 mod test {
-    use crate::data::Resume;
+    use crate::data::{Resume, Technologies};
 
     #[test]
     fn test_deserialize_toml() {
@@ -191,5 +214,17 @@ mod test {
         assert_eq!(exp.projects[0].project_name, String::from("Project Name"));
         assert_eq!(exp.projects[0].url, String::from("https://example.com"));
         assert_eq!(exp.projects[0].description, String::from("Description"));
+    }
+
+    #[test]
+    fn test_verify_technologies() {
+        let t = Technologies {
+            technologies: vec!["foo", "bar", "baz", "foo", "things", "stuff"]
+                .into_iter()
+                .map(|x| String::from(x))
+                .collect(),
+        };
+        let r = Resume::verify_technologies(&t);
+        assert!(r.is_err());
     }
 }

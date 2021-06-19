@@ -303,7 +303,7 @@ fn section_header(header: &str) -> Document {
     doc
 }
 
-const PAR_MOD: &'_ str = "0.1in";
+const PAR_MOD: &'static str = "0.1in";
 
 fn par_skip_start() -> Document {
     let mut doc = Document::default();
