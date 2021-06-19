@@ -21,6 +21,23 @@ git clone --depth 1 https://github.com/spencewenski/resume_generator.git
 cargo run -- cargo run -- -i $HOME/Desktop/resume/resume.toml -o resume -d $HOME/Desktop/resume/output
 ```
 
+## Other helpful usage tips
+Create a script or alias to run the tool from any directory. Script version:
+```sh
+#!/bin/sh
+
+cargo run --manifest-path $HOME/projects/resume_generator/Cargo.toml -- -i $HOME/projects/resume/resume.toml -o resume -d $HOME/projects/resume/output "$@"
+```
+
+Regenerate the resume when the config file is updated:
+```sh
+# Install inotify-tools first
+## Arch linux
+sudo pacman -Sy inotify-tools
+# https://superuser.com/questions/181517/how-to-execute-a-command-whenever-a-file-changes
+while inotifywait -e close_write resume.toml; do resume; done
+```
+
 ## Design
 - Resume data is stored in a toml file
   - See `tst/test_resume.toml` for a sample
