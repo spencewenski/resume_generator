@@ -123,7 +123,7 @@ mod test {
 
         assert_eq!(
             rendered,
-            "## Links and Contact Info\n- GitHub: [github.com/foo](https://github.com/foo)\n- Foo: [example.com/foo](https://example.com/foo)\n- Bar: [example.com/bar](https://example.com/bar)"
+            "## Find me here\n- GitHub: [github.com/foo](https://github.com/foo)\n- Foo: [example.com/foo](https://example.com/foo)\n- Bar: [example.com/bar](https://example.com/bar)"
         );
     }
 
