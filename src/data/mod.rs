@@ -1,5 +1,5 @@
 use crate::config::Config;
-use crate::util::{string_from_file, toml_from_string};
+use crate::util::{default_true, string_from_file, toml_from_string};
 use std::collections::HashSet;
 
 impl Resume {
@@ -101,11 +101,35 @@ pub struct OtherExperience {
     pub projects: Vec<ProjectInfo>,
 }
 
-#[derive(Debug, Serialize, Deserialize, Default)]
+impl OtherExperience {
+    pub fn get_projects(&self) -> Vec<&ProjectInfo> {
+        self.projects.iter().collect()
+    }
+
+    pub fn get_projects_for_resume(&self) -> Vec<&ProjectInfo> {
+        self.projects
+            .iter()
+            .filter(|x| x.include_on_resume)
+            .collect()
+    }
+
+    pub fn get_projects_for_github(&self) -> Vec<&ProjectInfo> {
+        self.projects
+            .iter()
+            .filter(|x| x.include_on_github)
+            .collect()
+    }
+}
+
+#[derive(Debug, Serialize, Deserialize, Default, Clone)]
 pub struct ProjectInfo {
     pub project_name: String,
     pub url: String,
     pub description: String,
+    #[serde(default = "default_true")]
+    pub include_on_resume: bool,
+    #[serde(default = "default_true")]
+    pub include_on_github: bool,
 }
 
 #[derive(Debug, Serialize, Deserialize, Default)]

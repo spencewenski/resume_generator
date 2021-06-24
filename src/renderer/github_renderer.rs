@@ -1,5 +1,5 @@
 use crate::config::Config;
-use crate::data::{Objective, OtherExperience, PersonalInfo, Resume, Technologies};
+use crate::data::{Objective, OtherExperience, PersonalInfo, ProjectInfo, Resume, Technologies};
 use crate::renderer::markdown_renderer::MarkdownRenderer;
 use crate::renderer::Renderer;
 use crate::util::{add_https_to_url, write_string_to_file, FooterText};
@@ -84,6 +84,26 @@ impl Renderer<Objective, String> for GitHubRenderer {
 
 impl Renderer<OtherExperience, String> for GitHubRenderer {
     fn render(self: &Self, element: &OtherExperience, config: &Config) -> Result<String, String> {
+        let mut text = format!("## Projects");
+
+        // todo: clean up?
+        let projects = element
+            .get_projects_for_github()
+            .into_iter()
+            .map(|e| self.render(e, config))
+            .reduce(|a, b| Ok(format!("{}\n{}", a?, b?)))
+            .unwrap_or(Err(format!(
+                "An error occurred while rendering other experience to markdown."
+            )))?;
+
+        text = format!("{}\n{}", text, projects);
+
+        Ok(text)
+    }
+}
+
+impl Renderer<ProjectInfo, String> for GitHubRenderer {
+    fn render(self: &Self, element: &ProjectInfo, config: &Config) -> Result<String, String> {
         self.md.render(element, config)
     }
 }
@@ -143,16 +163,22 @@ mod test {
             project_name: String::from("project_nameA"),
             description: String::from("descriptionA"),
             url: String::from("example.com"),
+            include_on_github: true,
+            ..Default::default()
         };
         let b = ProjectInfo {
             project_name: String::from("project_nameB"),
             description: String::from("Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut"),
             url: String::from("example.com"),
+            include_on_github: true,
+            ..Default::default()
         };
         let c = ProjectInfo {
             project_name: String::from("project_nameC"),
             description: String::from("descriptionC"),
             url: String::from("example.com"),
+            include_on_github: true,
+            ..Default::default()
         };
         let x = OtherExperience {
             projects: vec![a, b, c],

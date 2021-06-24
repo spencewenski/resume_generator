@@ -234,8 +234,8 @@ impl Renderer<OtherExperience, Document> for PdfRenderer {
 
         let mut itemize_content = vec![String::from("\\setlength\\itemsep{-0.05in}")];
         let mut projects = element
-            .projects
-            .iter()
+            .get_projects_for_resume()
+            .into_iter()
             .map(|e| self.render(e, config).unwrap_or_default())
             .collect::<Vec<String>>();
         itemize_content.append(projects.borrow_mut());
@@ -408,16 +408,22 @@ mod test {
             project_name: String::from("project_nameA"),
             description: String::from("descriptionA"),
             url: String::from("example.com"),
+            include_on_resume: true,
+            ..Default::default()
         };
         let b = ProjectInfo {
-                project_name: String::from("project_nameB"),
-                description: String::from("Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut"),
-                url: String::from("example.com"),
-            };
+            project_name: String::from("project_nameB"),
+            description: String::from("Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut"),
+            url: String::from("example.com"),
+            include_on_resume: true,
+            ..Default::default()
+        };
         let c = ProjectInfo {
             project_name: String::from("project_nameC"),
             description: String::from("descriptionC"),
             url: String::from("example.com"),
+            include_on_resume: true,
+            ..Default::default()
         };
         let x = OtherExperience {
             projects: vec![a, b, c],

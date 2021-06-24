@@ -141,6 +141,14 @@ pub fn split_string_across_lines(
     text
 }
 
+pub fn default_true() -> bool {
+    true
+}
+
+pub fn default_false() -> bool {
+    false
+}
+
 #[cfg(test)]
 mod test {
     use crate::util::{

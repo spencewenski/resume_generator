@@ -326,16 +326,19 @@ positionB                            startB - endB
             project_name: String::from("project_nameA"),
             description: String::from("descriptionA"),
             url: String::from("example.com"),
+            ..Default::default()
         };
         let b = ProjectInfo {
             project_name: String::from("project_nameB"),
             description: String::from("Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut"),
             url: String::from("example.com"),
+            ..Default::default()
         };
         let c = ProjectInfo {
             project_name: String::from("project_nameC"),
             description: String::from("descriptionC"),
             url: String::from("example.com"),
+            ..Default::default()
         };
         let x = OtherExperience {
             projects: vec![a, b, c],
