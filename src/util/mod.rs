@@ -1,3 +1,4 @@
+use crate::config::Config;
 use chrono::{Datelike, Local};
 use serde::Deserialize;
 use std::fs;
@@ -59,6 +60,14 @@ pub fn write_string_to_path(s: &str, path: &Path) -> Result<PathBuf, String> {
     Ok(path.to_path_buf())
 }
 
+pub fn cover_letter_file_name(config: &Config) -> String {
+    if let Some(cover_letter_name) = &config.args.cover_letter_output_name {
+        cover_letter_name.clone()
+    } else {
+        format!("{}-cover_letter", config.args.output_name)
+    }
+}
+
 pub fn add_https_to_url(url: &str) -> String {
     if url.starts_with("https://") {
         url.to_owned()
@@ -79,13 +88,7 @@ pub struct FooterText {
 
 impl FooterText {
     pub fn new() -> FooterText {
-        let now = Local::now();
-        let prefix = format!(
-            "Updated on {day} {month} {year} using",
-            day = now.day(),
-            month = now.format("%B"),
-            year = now.year()
-        );
+        let prefix = format!("Updated on {} using", date_string());
         // todo: make this url configurable somehow
         let url = String::from("github.com/spencewenski/resume_generator");
         let basic_text = format!("{} {}", prefix, url);
@@ -95,6 +98,16 @@ impl FooterText {
             url,
         }
     }
+}
+
+pub fn date_string() -> String {
+    let now = Local::now();
+    format!(
+        "{day} {month} {year}",
+        day = now.day(),
+        month = now.format("%B"),
+        year = now.year()
+    )
 }
 
 /// Escape some special characters by placing a '\' in front
@@ -151,9 +164,12 @@ pub fn default_false() -> bool {
 
 #[cfg(test)]
 mod test {
+    use crate::config::arguments::Arguments;
+    use crate::config::Config;
     use crate::util::{
-        add_https_to_url, escape_special_chars, get_path, split_string_across_lines,
-        string_from_file, time_range_string, toml_from_string, FooterText,
+        add_https_to_url, cover_letter_file_name, escape_special_chars, get_path,
+        split_string_across_lines, string_from_file, time_range_string, toml_from_string,
+        FooterText,
     };
     use chrono::{Datelike, Local};
 
@@ -201,6 +217,39 @@ mod test {
         let ext = Some(String::from("baz"));
         let p = get_path(dir.as_ref(), "bar", ext.as_ref());
         assert_eq!(p.as_os_str(), "./foo/bar.baz");
+    }
+
+    #[test]
+    fn test_cover_letter_file_name() {
+        let args = Arguments {
+            resume_input: String::from("foo"),
+            output_name: String::from("bar"),
+            ..Default::default()
+        };
+        let c = Config {
+            args,
+            ..Default::default()
+        };
+
+        let name = cover_letter_file_name(&c);
+        assert_eq!(name, String::from("bar-cover_letter"));
+    }
+
+    #[test]
+    fn test_cover_letter_file_name_with_arg() {
+        let args = Arguments {
+            resume_input: String::from("foo"),
+            output_name: String::from("bar"),
+            cover_letter_output_name: Some(String::from("baz")),
+            ..Default::default()
+        };
+        let c = Config {
+            args,
+            ..Default::default()
+        };
+
+        let name = cover_letter_file_name(&c);
+        assert_eq!(name, String::from("baz"));
     }
 
     #[test]

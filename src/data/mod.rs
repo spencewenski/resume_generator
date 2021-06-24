@@ -10,6 +10,10 @@ impl Resume {
         if let Some(email) = &config.args.email {
             resume.personal_info.email = email.to_owned()
         }
+        if let Some(cover_letter) = &mut resume.cover_letter {
+            cover_letter.name = Some(resume.name.clone());
+            cover_letter.email = Some(resume.personal_info.email.clone());
+        }
         Resume::verify(resume)
     }
 
@@ -48,6 +52,8 @@ pub struct Resume {
     pub other_experience: Option<OtherExperience>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub technologies: Option<Technologies>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub cover_letter: Option<CoverLetter>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Default)]
@@ -135,6 +141,17 @@ pub struct ProjectInfo {
 #[derive(Debug, Serialize, Deserialize, Default)]
 pub struct Technologies {
     pub technologies: Vec<String>,
+}
+
+#[derive(Debug, Serialize, Deserialize, Default)]
+pub struct CoverLetter {
+    pub paragraphs: Vec<String>,
+    /// Should be populated by impl Resume
+    #[serde(skip_serializing, skip_deserializing)]
+    pub name: Option<String>,
+    /// Should be populated by impl Resume
+    #[serde(skip_serializing, skip_deserializing)]
+    pub email: Option<String>,
 }
 
 #[cfg(test)]
@@ -238,6 +255,15 @@ mod test {
         assert_eq!(exp.projects[0].project_name, String::from("Project Name"));
         assert_eq!(exp.projects[0].url, String::from("https://example.com"));
         assert_eq!(exp.projects[0].description, String::from("Description"));
+
+        assert!(resume.cover_letter.is_some());
+        let cover_letter = resume.cover_letter.unwrap();
+        assert_eq!(cover_letter.paragraphs.len(), 3);
+        assert_eq!(cover_letter.paragraphs[0], "foo");
+        assert_eq!(cover_letter.paragraphs[1], "bar");
+        assert_eq!(cover_letter.paragraphs[2], "baz");
+        assert_eq!(cover_letter.name.unwrap(), resume.name);
+        assert_eq!(cover_letter.email.unwrap(), resume.personal_info.email);
     }
 
     #[test]

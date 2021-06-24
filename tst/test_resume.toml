@@ -61,3 +61,10 @@ technologies = [
 project_name = "Project Name"
 url = "https://example.com"
 description = "Description"
+
+[cover_letter]
+paragraphs = [
+    "foo",
+    "bar",
+    "baz",
+]

@@ -1,10 +1,13 @@
 use crate::config::Config;
 use crate::data::{
-    Education, Objective, OtherExperience, PersonalInfo, ProfessionalExperience, ProjectInfo,
-    Resume, Technologies,
+    CoverLetter, Education, Objective, OtherExperience, PersonalInfo, ProfessionalExperience,
+    ProjectInfo, Resume, Technologies,
 };
 use crate::renderer::Renderer;
-use crate::util::{split_string_across_lines, time_range_string, write_string_to_file, FooterText};
+use crate::util::{
+    cover_letter_file_name, date_string, split_string_across_lines, time_range_string,
+    write_string_to_file, FooterText,
+};
 use std::path::PathBuf;
 
 pub struct TextRenderer;
@@ -17,13 +20,24 @@ impl TextRenderer {
 
 impl Renderer<Resume, PathBuf> for TextRenderer {
     fn render(self: &Self, element: &Resume, config: &Config) -> Result<PathBuf, String> {
-        let s: String = self.render(element, config)?;
+        let ext = String::from("txt");
 
+        if let Some(c) = &element.cover_letter {
+            let cover_letter = self.render(c, config)?;
+            write_string_to_file(
+                &cover_letter,
+                config.args.output_dir.as_ref(),
+                &cover_letter_file_name(config),
+                Some(&ext),
+            )?;
+        }
+
+        let resume: String = self.render(element, config)?;
         write_string_to_file(
-            &s,
+            &resume,
             config.args.output_dir.as_ref(),
             &config.args.output_name,
-            Some(String::from("txt")).as_ref(),
+            Some(&ext),
         )
     }
 }
@@ -222,6 +236,42 @@ impl Renderer<Education, String> for TextRenderer {
     }
 }
 
+impl Renderer<CoverLetter, String> for TextRenderer {
+    fn render(self: &Self, element: &CoverLetter, config: &Config) -> Result<String, String> {
+        // let header = if let (Some(name), Some(email)) = (&element.name, &element.email) {
+        //     format!("{}\n\n{}\n\n{}\n\n", name, email, date_string())
+        // } else {
+        //     String::new()
+        // };
+
+        let mut header = String::new();
+        if let Some(name) = &element.name {
+            header = format!("{}\n\n", name);
+        }
+        if let Some(email) = &element.email {
+            header = format!("{}{}\n\n", header, email);
+        }
+        header = format!("{}{}\n\n", header, date_string());
+
+        let paragraphs = element
+            .paragraphs
+            .iter()
+            .map(|p| {
+                split_string_across_lines(p, config.format_config.text_config.width, None, None)
+            })
+            .collect::<Vec<String>>()
+            .join("\n\n");
+
+        let footer = if let Some(name) = &element.name {
+            format!("Sincerely,\n\n{}", name)
+        } else {
+            String::new()
+        };
+
+        Ok(format!("{}{}\n\n{}", header, paragraphs, footer))
+    }
+}
+
 fn centered_string(s: &str, width: usize) -> String {
     format!("{s:>width$}", s = s, width = (width / 2) + (s.len() / 2))
 }
@@ -240,8 +290,8 @@ mod test {
     use crate::config::format_config::{FormatConfig, TextConfig};
     use crate::config::Config;
     use crate::data::{
-        Education, Objective, OtherExperience, PersonalInfo, ProfessionalExperience, ProjectInfo,
-        Technologies,
+        CoverLetter, Education, Objective, OtherExperience, PersonalInfo, ProfessionalExperience,
+        ProjectInfo, Technologies,
     };
     use crate::renderer::text_renderer::TextRenderer;
     use crate::renderer::Renderer;
@@ -406,6 +456,21 @@ positionB                            startB - endB
 school                                    location
 major                                   graduation"
         );
+    }
+
+    #[test]
+    fn test_cover_letter() {
+        let x = CoverLetter {
+            paragraphs: vec!["foo", "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut", "baz"]
+                .into_iter()
+                .map(|x| String::from(x))
+                .collect(),
+            name: Some(String::from("Foo Bar")),
+            email: Some(String::from("foo@bar.com")),
+        };
+
+        let rendered = TextRenderer::new().render(&x, &get_config()).unwrap();
+        assert_eq!(rendered, "Foo Bar\n\nfoo@bar.com\n\n24 June 2021\n\nfoo\n\nLorem ipsum dolor sit amet, consectetur adipiscing\nelit, sed do eiusmod tempor incididunt ut\n\nbaz\n\nSincerely,\n\nFoo Bar");
     }
 
     fn get_config() -> Config {

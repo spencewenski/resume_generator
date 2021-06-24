@@ -4,6 +4,7 @@ use argparse::{ArgumentParser, Store, StoreOption};
 pub struct Arguments {
     pub resume_input: String,
     pub output_name: String,
+    pub cover_letter_output_name: Option<String>,
     pub output_dir: Option<String>,
     pub format_config: Option<String>,
     pub email: Option<String>,
@@ -27,6 +28,12 @@ impl Arguments {
                     "The name to use for the generated resumes.",
                 )
                 .required();
+
+            ap.refer(&mut args.cover_letter_output_name).add_option(
+                &["-c", "--cover-letter-output-name"],
+                StoreOption,
+                "The name to use for the generated cover letters. Defaults to appending '-cover_letter' to the output-name",
+            );
 
             ap.refer(&mut args.output_dir)
                 .add_option(&["-d", "--output-dir"],
