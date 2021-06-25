@@ -238,12 +238,6 @@ impl Renderer<Education, String> for TextRenderer {
 
 impl Renderer<CoverLetter, String> for TextRenderer {
     fn render(self: &Self, element: &CoverLetter, config: &Config) -> Result<String, String> {
-        // let header = if let (Some(name), Some(email)) = (&element.name, &element.email) {
-        //     format!("{}\n\n{}\n\n{}\n\n", name, email, date_string())
-        // } else {
-        //     String::new()
-        // };
-
         let mut header = String::new();
         if let Some(name) = &element.name {
             header = format!("{}\n\n", name);
@@ -251,7 +245,7 @@ impl Renderer<CoverLetter, String> for TextRenderer {
         if let Some(email) = &element.email {
             header = format!("{}{}\n\n", header, email);
         }
-        header = format!("{}{}\n\n", header, date_string());
+        header = format!("{}{}\n\n{}\n\n", header, date_string(), element.salutation);
 
         let paragraphs = element
             .paragraphs
@@ -263,7 +257,7 @@ impl Renderer<CoverLetter, String> for TextRenderer {
             .join("\n\n");
 
         let footer = if let Some(name) = &element.name {
-            format!("Sincerely,\n\n{}", name)
+            format!("{}\n\n{}", element.closing, name)
         } else {
             String::new()
         };
@@ -461,6 +455,8 @@ major                                   graduation"
     #[test]
     fn test_cover_letter() {
         let x = CoverLetter {
+            salutation: String::from("Hello,"),
+            closing: String::from("From,"),
             paragraphs: vec!["foo", "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut", "baz"]
                 .into_iter()
                 .map(|x| String::from(x))
@@ -470,7 +466,7 @@ major                                   graduation"
         };
 
         let rendered = TextRenderer::new().render(&x, &get_config()).unwrap();
-        assert_eq!(rendered, "Foo Bar\n\nfoo@bar.com\n\n24 June 2021\n\nfoo\n\nLorem ipsum dolor sit amet, consectetur adipiscing\nelit, sed do eiusmod tempor incididunt ut\n\nbaz\n\nSincerely,\n\nFoo Bar");
+        assert_eq!(rendered, "Foo Bar\n\nfoo@bar.com\n\n24 June 2021\n\nHello,\n\nfoo\n\nLorem ipsum dolor sit amet, consectetur adipiscing\nelit, sed do eiusmod tempor incididunt ut\n\nbaz\n\nFrom,\n\nFoo Bar");
     }
 
     fn get_config() -> Config {

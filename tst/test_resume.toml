@@ -63,6 +63,8 @@ url = "https://example.com"
 description = "Description"
 
 [cover_letter]
+salutation = "Hello,"
+closing = "From,"
 paragraphs = [
     "foo",
     "bar",

@@ -145,6 +145,8 @@ pub struct Technologies {
 
 #[derive(Debug, Serialize, Deserialize, Default)]
 pub struct CoverLetter {
+    pub salutation: String,
+    pub closing: String,
     pub paragraphs: Vec<String>,
     /// Should be populated by impl Resume
     #[serde(skip_serializing, skip_deserializing)]
@@ -258,6 +260,8 @@ mod test {
 
         assert!(resume.cover_letter.is_some());
         let cover_letter = resume.cover_letter.unwrap();
+        assert_eq!(cover_letter.salutation, "Hello,");
+        assert_eq!(cover_letter.closing, "From,");
         assert_eq!(cover_letter.paragraphs.len(), 3);
         assert_eq!(cover_letter.paragraphs[0], "foo");
         assert_eq!(cover_letter.paragraphs[1], "bar");
