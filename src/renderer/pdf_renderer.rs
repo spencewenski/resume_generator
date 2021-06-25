@@ -1,11 +1,12 @@
 use crate::config::Config;
 use crate::data::{
-    Education, Objective, OtherExperience, PersonalInfo, ProfessionalExperience, ProjectInfo,
-    Resume, Technologies,
+    CoverLetter, Education, Objective, OtherExperience, PersonalInfo, ProfessionalExperience,
+    ProjectInfo, Resume, Technologies,
 };
 use crate::renderer::Renderer;
 use crate::util::{
-    escape_special_chars, get_path, time_range_string, write_string_to_path, FooterText,
+    cover_letter_file_name, escape_special_chars, get_path, time_range_string,
+    write_string_to_path, FooterText,
 };
 use latex::{print, Document, Element, Paragraph, PreambleElement};
 use std::borrow::BorrowMut;
@@ -23,34 +24,42 @@ impl PdfRenderer {
 impl Renderer<Resume, PathBuf> for PdfRenderer {
     /// Write the LaTeX to a file, then run a command to generate a pdf from the LaTeX file
     fn render(self: &Self, element: &Resume, config: &Config) -> Result<PathBuf, String> {
-        let s: String = self.render(element, config)?;
-
-        let path = get_path(
-            config.args.output_dir.as_ref(),
-            &config.args.output_name,
-            Some(String::from("tex")).as_ref(),
-        );
-        write_string_to_path(&s, &path)?;
-
-        let x = Command::new("pdflatex")
-            .arg("-output-directory")
-            .arg(path.parent().unwrap_or(Path::new(".")).as_os_str())
-            .arg(path.as_os_str())
-            .output()
-            .map_err(|e| {
-                format!(
-                    "An error occurred while running the pdflatex command: {}",
-                    e
-                )
-            })?;
-        if !x.status.success() {
-            Err(format!(
-                "An error occurred while running the pdflatex command: {:?}",
-                x
-            ))
-        } else {
-            Ok(path.with_extension("pdf"))
+        if let Some(c) = &element.cover_letter {
+            let cover_letter: String = self.render(c, config)?;
+            render_tex_and_pdf(&cover_letter, &cover_letter_file_name(config), config)?;
         }
+
+        let resume: String = self.render(element, config)?;
+        render_tex_and_pdf(&resume, &config.args.output_name, config)
+    }
+}
+
+fn render_tex_and_pdf(s: &str, file_name: &str, config: &Config) -> Result<PathBuf, String> {
+    let path = get_path(
+        config.args.output_dir.as_ref(),
+        file_name,
+        Some(String::from("tex")).as_ref(),
+    );
+    write_string_to_path(&s, &path)?;
+
+    let x = Command::new("pdflatex")
+        .arg("-output-directory")
+        .arg(path.parent().unwrap_or(Path::new(".")).as_os_str())
+        .arg(path.as_os_str())
+        .output()
+        .map_err(|e| {
+            format!(
+                "An error occurred while running the pdflatex command: {}",
+                e
+            )
+        })?;
+    if !x.status.success() {
+        Err(format!(
+            "An error occurred while running the pdflatex command: {:?}",
+            x
+        ))
+    } else {
+        Ok(path.with_extension("pdf"))
     }
 }
 
@@ -63,7 +72,20 @@ impl Renderer<Resume, String> for PdfRenderer {
         // convert to a string
         print(&doc).map_err(|e| {
             format!(
-                "An error occurred while rendering the LaTeX document to a string: {}",
+                "An error occurred while rendering the LaTeX resume to a string: {}",
+                e
+            )
+        })
+    }
+}
+
+impl Renderer<CoverLetter, String> for PdfRenderer {
+    fn render(self: &Self, element: &CoverLetter, config: &Config) -> Result<String, String> {
+        let doc: Document = self.render(element, config)?;
+
+        print(&doc).map_err(|e| {
+            format!(
+                "An error occurred while rendering the LaTeX cover letter to a string: {}",
                 e
             )
         })
@@ -72,67 +94,34 @@ impl Renderer<Resume, String> for PdfRenderer {
 
 impl Renderer<Resume, Document> for PdfRenderer {
     fn render(self: &Self, element: &Resume, config: &Config) -> Result<Document, String> {
-        let mut doc = Document::default();
-        // LaTeX preamble
+        let mut doc = document_preamble(config);
+
+        // Name
+        doc.push(Element::Environment(
+            String::from("center"),
+            vec![format!("\\bf\\Large {}", element.name)],
+        ));
+
+        // Header
+        doc.push_doc(&self.render(&element.personal_info, config)?);
+
+        // We want everything to be flush to the left side (except for a few outliers)
+        doc.push(Element::UserDefined(String::from("\\begin{flushleft}")));
         {
-            doc.preamble
-                // Set the margins
-                .push(PreambleElement::UsePackage {
-                    package: String::from("geometry"),
-                    argument: Some(format!(
-                        "margin={}",
-                        &config.format_config.pdf_config.margin
-                    )),
-                })
-                // Set up the font encoding
-                .push(PreambleElement::UsePackage {
-                    package: String::from("fontenc"),
-                    argument: Some(String::from("T1")),
-                })
-                // Set up the footer and remove the header
-                .use_package("fancyhdr")
-                .push(PreambleElement::UserDefined(String::from("\\fancyhf{}")))
-                .push(PreambleElement::UserDefined(String::from(
-                    r"\pagestyle{fancy}",
-                )))
-                .push(PreambleElement::UserDefined(String::from(
-                    r"\renewcommand{\headrulewidth}{0pt}",
-                )))
-                .push(PreambleElement::UserDefined(format!(
-                    "\\cfoot{{{}}}",
-                    escape_special_chars(&FooterText::new().basic_text)
-                )));
-        }
-
-        // Add the actual resume content
-        {
-            // Name
-            doc.push(Element::Environment(
-                String::from("center"),
-                vec![format!("\\bf\\Large {}", element.name)],
-            ));
-
-            // Header
-            doc.push_doc(&self.render(&element.personal_info, config)?);
-
-            // We want everything to be flush to the left side (except for a few outliers)
-            doc.push(Element::UserDefined(String::from("\\begin{flushleft}")));
-            {
-                doc.push_doc(&self.render(&element.objective, config)?);
+            doc.push_doc(&self.render(&element.objective, config)?);
+            doc.push_doc(&vspace());
+            doc.push_doc(&self.render(&element.professional_experience, config)?);
+            if let Some(e) = &element.other_experience {
                 doc.push_doc(&vspace());
-                doc.push_doc(&self.render(&element.professional_experience, config)?);
-                if let Some(e) = &element.other_experience {
-                    doc.push_doc(&vspace());
-                    doc.push_doc(&self.render(e, config)?);
-                }
-                if let Some(e) = &element.technologies {
-                    doc.push_doc(&vspace());
-                    doc.push_doc(&self.render(e, config)?);
-                }
-                if let Some(e) = &element.education {
-                    doc.push_doc(&vspace());
-                    doc.push_doc(&self.render(e, config)?);
-                }
+                doc.push_doc(&self.render(e, config)?);
+            }
+            if let Some(e) = &element.technologies {
+                doc.push_doc(&vspace());
+                doc.push_doc(&self.render(e, config)?);
+            }
+            if let Some(e) = &element.education {
+                doc.push_doc(&vspace());
+                doc.push_doc(&self.render(e, config)?);
             }
 
             doc.push(Element::UserDefined(String::from("\\end{flushleft}")));
@@ -284,6 +273,88 @@ impl Renderer<Education, Document> for PdfRenderer {
     }
 }
 
+impl Renderer<CoverLetter, Document> for PdfRenderer {
+    fn render(self: &Self, element: &CoverLetter, config: &Config) -> Result<Document, String> {
+        let mut doc = document_preamble(config);
+
+        doc.push(Element::UserDefined(String::from(
+            "\\setlength\\parindent{0pt}",
+        )));
+
+        if let Some(name) = &element.name {
+            doc.push(Element::UserDefined(name.to_owned()));
+            doc.push(Element::UserDefined(String::new()));
+        }
+        if let Some(email) = &element.email {
+            doc.push(Element::UserDefined(email.to_owned()));
+            doc.push(Element::UserDefined(String::new()));
+        }
+
+        doc.push(Element::UserDefined(String::from(
+            "\\setlength\\parskip{2em}",
+        )));
+
+        doc.push(Element::UserDefined(element.salutation.to_owned()));
+        doc.push(Element::UserDefined(String::new()));
+
+        doc.push(Element::UserDefined(String::from(
+            "\\setlength\\parskip{1em}",
+        )));
+
+        element.paragraphs.iter().for_each(|p| {
+            doc.push(Element::UserDefined(p.to_owned()));
+            doc.push(Element::UserDefined(String::new()));
+        });
+
+        doc.push(Element::UserDefined(String::from(
+            "\\setlength\\parskip{2em}",
+        )));
+
+        doc.push(Element::UserDefined(element.closing.to_owned()));
+        doc.push(Element::UserDefined(String::new()));
+
+        doc.push(Element::UserDefined(String::from(
+            "\\setlength\\parskip{0em}",
+        )));
+
+        if let Some(name) = &element.name {
+            doc.push(Element::UserDefined(name.to_owned()));
+            doc.push(Element::UserDefined(String::new()));
+        }
+
+        Ok(doc)
+    }
+}
+
+fn document_preamble(config: &Config) -> Document {
+    let mut doc = Document::default();
+    doc.preamble
+        // Set the margins
+        .push(PreambleElement::UsePackage {
+            package: String::from("geometry"),
+            argument: Some(format!("margin={}", config.format_config.pdf_config.margin)),
+        })
+        // Set up the font encoding
+        .push(PreambleElement::UsePackage {
+            package: String::from("fontenc"),
+            argument: Some(String::from("T1")),
+        })
+        // Set up the footer and remove the header
+        .use_package("fancyhdr")
+        .push(PreambleElement::UserDefined(String::from("\\fancyhf{}")))
+        .push(PreambleElement::UserDefined(String::from(
+            r"\pagestyle{fancy}",
+        )))
+        .push(PreambleElement::UserDefined(String::from(
+            r"\renewcommand{\headrulewidth}{0pt}",
+        )))
+        .push(PreambleElement::UserDefined(format!(
+            "\\cfoot{{{}}}",
+            escape_special_chars(&FooterText::new().basic_text)
+        )));
+    doc
+}
+
 fn vspace() -> Document {
     let mut doc = Document::default();
     doc.push(Element::UserDefined(String::from(
@@ -328,8 +399,8 @@ mod test {
     use crate::config::format_config::{FormatConfig, TextConfig};
     use crate::config::Config;
     use crate::data::{
-        Education, Objective, OtherExperience, PersonalInfo, ProfessionalExperience, ProjectInfo,
-        Technologies,
+        CoverLetter, Education, Objective, OtherExperience, PersonalInfo, ProfessionalExperience,
+        ProjectInfo, Technologies,
     };
     use crate::renderer::pdf_renderer::PdfRenderer;
     use crate::renderer::Renderer;
@@ -484,6 +555,25 @@ mod test {
             rendered,
             "\\documentclass{article}\n\\begin{document}\n\\addtolength{\\parskip}{ -0.1in }\n\\begin{center}\n{\\bf UNIVERSITY}\n\\end{center}\n\\addtolength{\\parskip}{ 0.1in }\n{\\bf school} \\hfill location\n\n\\emph{major} \\hfill graduation\n\n\\end{document}\n"
         );
+    }
+
+    #[test]
+    fn test_cover_letter() {
+        let x = CoverLetter {
+            salutation: String::from("Hello,"),
+            closing: String::from("From,"),
+            name: Some(String::from("Foo Bar")),
+            email: Some(String::from("foo@bar.com")),
+            paragraphs: vec!["foo", "bar", "baz"]
+                .into_iter()
+                .map(|x| String::from(x))
+                .collect(),
+        };
+
+        let rendered = PdfRenderer::new().render(&x, &get_config()).unwrap();
+        let rendered = print(&rendered).unwrap();
+
+        assert_eq!(rendered, "\\documentclass{article}\n\\usepackage[margin=0.75in]{geometry}\n\\usepackage[T1]{fontenc}\n\\usepackage{fancyhdr}\n\\fancyhf{}\n\\pagestyle{fancy}\n\\renewcommand{\\headrulewidth}{0pt}\n\\cfoot{Updated on 24 June 2021 using github.com/spencewenski/resume\\_generator}\n\\begin{document}\n\\setlength\\parindent{0pt}\nFoo Bar\n\nfoo@bar.com\n\n\\setlength\\parskip{2em}\nHello,\n\n\\setlength\\parskip{1em}\nfoo\n\nbar\n\nbaz\n\n\\setlength\\parskip{2em}\nFrom,\n\n\\setlength\\parskip{0em}\nFoo Bar\n\n\\end{document}\n");
     }
 
     fn get_config() -> Config {
