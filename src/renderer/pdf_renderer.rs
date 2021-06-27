@@ -5,7 +5,7 @@ use crate::data::{
 };
 use crate::renderer::Renderer;
 use crate::util::{
-    cover_letter_file_name, escape_special_chars, get_path, time_range_string,
+    cover_letter_file_name, date_string, escape_special_chars, get_path, time_range_string,
     write_string_to_path, FooterText,
 };
 use latex::{print, Document, Element, Paragraph, PreambleElement};
@@ -94,7 +94,7 @@ impl Renderer<CoverLetter, String> for PdfRenderer {
 
 impl Renderer<Resume, Document> for PdfRenderer {
     fn render(self: &Self, element: &Resume, config: &Config) -> Result<Document, String> {
-        let mut doc = document_preamble(config);
+        let mut doc = document_preamble(config, true);
 
         // Name
         doc.push(Element::Environment(
@@ -275,7 +275,7 @@ impl Renderer<Education, Document> for PdfRenderer {
 
 impl Renderer<CoverLetter, Document> for PdfRenderer {
     fn render(self: &Self, element: &CoverLetter, config: &Config) -> Result<Document, String> {
-        let mut doc = document_preamble(config);
+        let mut doc = document_preamble(config, false);
 
         doc.push(Element::UserDefined(String::from(
             "\\setlength\\parindent{0pt}",
@@ -289,6 +289,8 @@ impl Renderer<CoverLetter, Document> for PdfRenderer {
             doc.push(Element::UserDefined(email.to_owned()));
             doc.push(Element::UserDefined(String::new()));
         }
+        doc.push(Element::UserDefined(date_string()));
+        doc.push(Element::UserDefined(String::new()));
 
         doc.push(Element::UserDefined(String::from(
             "\\setlength\\parskip{2em}",
@@ -326,7 +328,7 @@ impl Renderer<CoverLetter, Document> for PdfRenderer {
     }
 }
 
-fn document_preamble(config: &Config) -> Document {
+fn document_preamble(config: &Config, include_footer: bool) -> Document {
     let mut doc = Document::default();
     doc.preamble
         // Set the margins
@@ -347,11 +349,13 @@ fn document_preamble(config: &Config) -> Document {
         )))
         .push(PreambleElement::UserDefined(String::from(
             r"\renewcommand{\headrulewidth}{0pt}",
-        )))
-        .push(PreambleElement::UserDefined(format!(
+        )));
+    if include_footer {
+        doc.preamble.push(PreambleElement::UserDefined(format!(
             "\\cfoot{{{}}}",
             escape_special_chars(&FooterText::new().basic_text)
         )));
+    }
     doc
 }
 
@@ -404,6 +408,7 @@ mod test {
     };
     use crate::renderer::pdf_renderer::PdfRenderer;
     use crate::renderer::Renderer;
+    use crate::util::date_string;
     use latex::print;
 
     #[test]
@@ -573,8 +578,10 @@ mod test {
         let rendered = PdfRenderer::new().render(&x, &get_config()).unwrap();
         let rendered = print(&rendered).unwrap();
 
-        // Skip the preamble, which contains a date string, and just check the actual document
-        assert!(rendered.contains("\\begin{document}\n\\setlength\\parindent{0pt}\nFoo Bar\n\nfoo@bar.com\n\n\\setlength\\parskip{2em}\nHello,\n\n\\setlength\\parskip{1em}\nfoo\n\nbar\n\nbaz\n\n\\setlength\\parskip{2em}\nFrom,\n\n\\setlength\\parskip{0em}\nFoo Bar\n\n\\end{document}\n"));
+        let expected_prefix = "\\documentclass{article}\n\\usepackage[margin=0.75in]{geometry}\n\\usepackage[T1]{fontenc}\n\\usepackage{fancyhdr}\n\\fancyhf{}\n\\pagestyle{fancy}\n\\renewcommand{\\headrulewidth}{0pt}\n\\begin{document}\n\\setlength\\parindent{0pt}\nFoo Bar\n\nfoo@bar.com\n\n";
+        let expected_suffix = "\n\n\\setlength\\parskip{2em}\nHello,\n\n\\setlength\\parskip{1em}\nfoo\n\nbar\n\nbaz\n\n\\setlength\\parskip{2em}\nFrom,\n\n\\setlength\\parskip{0em}\nFoo Bar\n\n\\end{document}\n";
+        let expected = format!("{}{}{}", expected_prefix, date_string(), expected_suffix);
+        assert_eq!(rendered, expected);
     }
 
     fn get_config() -> Config {

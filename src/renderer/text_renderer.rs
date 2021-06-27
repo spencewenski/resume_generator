@@ -289,6 +289,7 @@ mod test {
     };
     use crate::renderer::text_renderer::TextRenderer;
     use crate::renderer::Renderer;
+    use crate::util::date_string;
 
     #[test]
     fn test_personal_info() {
@@ -466,7 +467,8 @@ major                                   graduation"
         };
 
         let rendered = TextRenderer::new().render(&x, &get_config()).unwrap();
-        assert_eq!(rendered, "Foo Bar\n\nfoo@bar.com\n\n24 June 2021\n\nHello,\n\nfoo\n\nLorem ipsum dolor sit amet, consectetur adipiscing\nelit, sed do eiusmod tempor incididunt ut\n\nbaz\n\nFrom,\n\nFoo Bar");
+        let expected = format!("Foo Bar\n\nfoo@bar.com\n\n{}\n\nHello,\n\nfoo\n\nLorem ipsum dolor sit amet, consectetur adipiscing\nelit, sed do eiusmod tempor incididunt ut\n\nbaz\n\nFrom,\n\nFoo Bar", date_string());
+        assert_eq!(rendered, expected);
     }
 
     fn get_config() -> Config {
