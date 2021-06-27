@@ -240,12 +240,17 @@ impl Renderer<CoverLetter, String> for TextRenderer {
     fn render(self: &Self, element: &CoverLetter, config: &Config) -> Result<String, String> {
         let mut header = String::new();
         if let Some(name) = &element.name {
-            header = format!("{}\n\n", name);
+            header = format!("{}\n", name);
         }
         if let Some(email) = &element.email {
-            header = format!("{}{}\n\n", header, email);
+            header = format!("{}{}\n", header, email);
         }
-        header = format!("{}{}\n\n{}\n\n", header, date_string(), element.salutation);
+        header = format!(
+            "{}{}\n\n\n{}\n\n",
+            header,
+            date_string(),
+            element.salutation
+        );
 
         let paragraphs = element
             .paragraphs
@@ -257,12 +262,12 @@ impl Renderer<CoverLetter, String> for TextRenderer {
             .join("\n\n");
 
         let footer = if let Some(name) = &element.name {
-            format!("{}\n\n{}", element.closing, name)
+            format!("{}\n{}", element.closing, name)
         } else {
             String::new()
         };
 
-        Ok(format!("{}{}\n\n{}", header, paragraphs, footer))
+        Ok(format!("{}{}\n\n\n{}", header, paragraphs, footer))
     }
 }
 
@@ -467,7 +472,7 @@ major                                   graduation"
         };
 
         let rendered = TextRenderer::new().render(&x, &get_config()).unwrap();
-        let expected = format!("Foo Bar\n\nfoo@bar.com\n\n{}\n\nHello,\n\nfoo\n\nLorem ipsum dolor sit amet, consectetur adipiscing\nelit, sed do eiusmod tempor incididunt ut\n\nbaz\n\nFrom,\n\nFoo Bar", date_string());
+        let expected = format!("Foo Bar\nfoo@bar.com\n{}\n\n\nHello,\n\nfoo\n\nLorem ipsum dolor sit amet, consectetur adipiscing\nelit, sed do eiusmod tempor incididunt ut\n\nbaz\n\n\nFrom,\nFoo Bar", date_string());
         assert_eq!(rendered, expected);
     }
 
