@@ -13,6 +13,7 @@ impl Resume {
         if let Some(cover_letter) = &mut resume.cover_letter {
             cover_letter.name = Some(resume.name.clone());
             cover_letter.email = Some(resume.personal_info.email.clone());
+            cover_letter.paragraphs.retain(|x| !x.is_empty())
         }
         Resume::verify(resume)
     }
