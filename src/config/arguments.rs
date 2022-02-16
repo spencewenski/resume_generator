@@ -1,7 +1,7 @@
 use clap::Parser;
 
 /// Resume Generator.
-#[derive(Debug, Parser)]
+#[derive(Debug, Parser, Default)]
 #[clap(author, version, about, long_about = None)]
 pub struct Arguments {
     /// The resume data file.

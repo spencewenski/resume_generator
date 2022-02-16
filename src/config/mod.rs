@@ -5,7 +5,7 @@ use clap::Parser;
 pub mod arguments;
 pub mod format_config;
 
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct Config {
     pub format_config: FormatConfig,
     pub args: Arguments,
