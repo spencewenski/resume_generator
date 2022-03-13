@@ -1,0 +1,4 @@
+#!/usr/bin/env sh
+
+# Check code formatting before checking in
+cargo fmt --check || { echo; echo "Run 'cargo fmt' to fix the formatting."; exit 1; }
