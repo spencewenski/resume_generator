@@ -276,7 +276,7 @@ mod test {
         let t = Technologies {
             technologies: vec!["foo", "bar", "baz", "foo", "things", "stuff"]
                 .into_iter()
-                .map(|x| String::from(x))
+                .map(String::from)
                 .collect(),
         };
         let r = Resume::verify_technologies(&t);

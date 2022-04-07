@@ -17,7 +17,7 @@ pub fn toml_from_string<'de, T>(x: &'de str) -> Result<T, String>
 where
     T: Deserialize<'de>,
 {
-    toml::from_str::<'de, T>(&x).map_err(|e| format!("An error occurred while parsing toml: {}", e))
+    toml::from_str::<'de, T>(x).map_err(|e| format!("An error occurred while parsing toml: {}", e))
 }
 
 pub fn get_path(dir: Option<&String>, file_name: &str, extension: Option<&String>) -> PathBuf {
@@ -42,7 +42,7 @@ pub fn write_string_to_file(
 }
 
 pub fn write_string_to_path(s: &str, path: &Path) -> Result<PathBuf, String> {
-    let dir = path.parent().unwrap_or(Path::new("."));
+    let dir = path.parent().unwrap_or_else(|| Path::new("."));
     fs::create_dir_all(dir).map_err(|e| {
         format!(
             "An error occurred while creating directory [{}]: {}",
@@ -97,6 +97,12 @@ impl FooterText {
             prefix,
             url,
         }
+    }
+}
+
+impl Default for FooterText {
+    fn default() -> Self {
+        FooterText::new()
     }
 }
 

@@ -13,17 +13,18 @@ use std::borrow::BorrowMut;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
+#[derive(Default)]
 pub struct PdfRenderer;
 
 impl PdfRenderer {
     pub fn new() -> PdfRenderer {
-        PdfRenderer
+        PdfRenderer::default()
     }
 }
 
 impl Renderer<Resume, PathBuf> for PdfRenderer {
     /// Write the LaTeX to a file, then run a command to generate a pdf from the LaTeX file
-    fn render(self: &Self, element: &Resume, config: &Config) -> Result<PathBuf, String> {
+    fn render(&self, element: &Resume, config: &Config) -> Result<PathBuf, String> {
         if let Some(c) = &element.cover_letter {
             let cover_letter: String = self.render(c, config)?;
             render_tex_and_pdf(&cover_letter, &cover_letter_file_name(config), config)?;
@@ -40,11 +41,11 @@ fn render_tex_and_pdf(s: &str, file_name: &str, config: &Config) -> Result<PathB
         file_name,
         Some(String::from("tex")).as_ref(),
     );
-    write_string_to_path(&s, &path)?;
+    write_string_to_path(s, &path)?;
 
     let x = Command::new("pdflatex")
         .arg("-output-directory")
-        .arg(path.parent().unwrap_or(Path::new(".")).as_os_str())
+        .arg(path.parent().unwrap_or_else(|| Path::new(".")).as_os_str())
         .arg(path.as_os_str())
         .output()
         .map_err(|e| {
@@ -65,7 +66,7 @@ fn render_tex_and_pdf(s: &str, file_name: &str, config: &Config) -> Result<PathB
 
 impl Renderer<Resume, String> for PdfRenderer {
     /// Render a LaTeX string
-    fn render(self: &Self, element: &Resume, config: &Config) -> Result<String, String> {
+    fn render(&self, element: &Resume, config: &Config) -> Result<String, String> {
         // Build the document
         let doc: Document = self.render(element, config)?;
 
@@ -80,7 +81,7 @@ impl Renderer<Resume, String> for PdfRenderer {
 }
 
 impl Renderer<CoverLetter, String> for PdfRenderer {
-    fn render(self: &Self, element: &CoverLetter, config: &Config) -> Result<String, String> {
+    fn render(&self, element: &CoverLetter, config: &Config) -> Result<String, String> {
         let doc: Document = self.render(element, config)?;
 
         print(&doc).map_err(|e| {
@@ -93,7 +94,7 @@ impl Renderer<CoverLetter, String> for PdfRenderer {
 }
 
 impl Renderer<Resume, Document> for PdfRenderer {
-    fn render(self: &Self, element: &Resume, config: &Config) -> Result<Document, String> {
+    fn render(&self, element: &Resume, config: &Config) -> Result<Document, String> {
         let mut doc = document_preamble(config, true);
 
         // Name
@@ -132,7 +133,7 @@ impl Renderer<Resume, Document> for PdfRenderer {
 }
 
 impl Renderer<PersonalInfo, Document> for PdfRenderer {
-    fn render(self: &Self, element: &PersonalInfo, _config: &Config) -> Result<Document, String> {
+    fn render(&self, element: &PersonalInfo, _config: &Config) -> Result<Document, String> {
         let mut doc = Document::default();
         // todo: display something else instead of phone number?
         doc.push(Element::UserDefined(format!(
@@ -148,7 +149,7 @@ impl Renderer<PersonalInfo, Document> for PdfRenderer {
 }
 
 impl Renderer<Objective, Document> for PdfRenderer {
-    fn render(self: &Self, element: &Objective, _config: &Config) -> Result<Document, String> {
+    fn render(&self, element: &Objective, _config: &Config) -> Result<Document, String> {
         let mut doc = Document::default();
         doc.push(Paragraph::from(element.objective.as_str()));
         Ok(doc)
@@ -157,7 +158,7 @@ impl Renderer<Objective, Document> for PdfRenderer {
 
 impl Renderer<Vec<ProfessionalExperience>, Document> for PdfRenderer {
     fn render(
-        self: &Self,
+        &self,
         element: &Vec<ProfessionalExperience>,
         config: &Config,
     ) -> Result<Document, String> {
@@ -172,9 +173,12 @@ impl Renderer<Vec<ProfessionalExperience>, Document> for PdfRenderer {
                 a.push_doc(&b?);
                 Ok(a)
             })
-            .unwrap_or(Err(format!(
-                "An error occurred while rendering professional experience to LaTeX."
-            )))?;
+            .unwrap_or_else(|| {
+                Err(
+                    "An error occurred while rendering professional experience to LaTeX."
+                        .to_string(),
+                )
+            })?;
         doc.push_doc(&reduced);
 
         Ok(doc)
@@ -183,7 +187,7 @@ impl Renderer<Vec<ProfessionalExperience>, Document> for PdfRenderer {
 
 impl Renderer<ProfessionalExperience, Document> for PdfRenderer {
     fn render(
-        self: &Self,
+        &self,
         element: &ProfessionalExperience,
         _config: &Config,
     ) -> Result<Document, String> {
@@ -217,7 +221,7 @@ impl Renderer<ProfessionalExperience, Document> for PdfRenderer {
 }
 
 impl Renderer<OtherExperience, Document> for PdfRenderer {
-    fn render(self: &Self, element: &OtherExperience, config: &Config) -> Result<Document, String> {
+    fn render(&self, element: &OtherExperience, config: &Config) -> Result<Document, String> {
         let mut doc = Document::default();
         doc.push_doc(&section_header("PROJECTS"));
 
@@ -238,13 +242,13 @@ impl Renderer<OtherExperience, Document> for PdfRenderer {
 }
 
 impl Renderer<ProjectInfo, String> for PdfRenderer {
-    fn render(self: &Self, element: &ProjectInfo, _config: &Config) -> Result<String, String> {
+    fn render(&self, element: &ProjectInfo, _config: &Config) -> Result<String, String> {
         Ok(format!("\\item {}\n", element.description))
     }
 }
 
 impl Renderer<Technologies, Document> for PdfRenderer {
-    fn render(self: &Self, element: &Technologies, _config: &Config) -> Result<Document, String> {
+    fn render(&self, element: &Technologies, _config: &Config) -> Result<Document, String> {
         let mut doc = Document::default();
         doc.push_doc(&section_header("TECHNOLOGIES"));
         let technologies = element.technologies.join(", ");
@@ -258,7 +262,7 @@ impl Renderer<Technologies, Document> for PdfRenderer {
 }
 
 impl Renderer<Education, Document> for PdfRenderer {
-    fn render(self: &Self, element: &Education, _config: &Config) -> Result<Document, String> {
+    fn render(&self, element: &Education, _config: &Config) -> Result<Document, String> {
         let mut doc = Document::default();
         doc.push_doc(&section_header("UNIVERSITY"));
         doc.push(Element::UserDefined(format!(
@@ -274,7 +278,7 @@ impl Renderer<Education, Document> for PdfRenderer {
 }
 
 impl Renderer<CoverLetter, Document> for PdfRenderer {
-    fn render(self: &Self, element: &CoverLetter, config: &Config) -> Result<Document, String> {
+    fn render(&self, element: &CoverLetter, config: &Config) -> Result<Document, String> {
         let mut doc = document_preamble(config, false);
 
         doc.push(Element::UserDefined(String::from(
@@ -378,7 +382,7 @@ fn section_header(header: &str) -> Document {
     doc
 }
 
-const PAR_MOD: &'static str = "0.1in";
+const PAR_MOD: &str = "0.1in";
 
 fn par_skip_start() -> Document {
     let mut doc = Document::default();
@@ -571,7 +575,7 @@ mod test {
             email: Some(String::from("foo@bar.com")),
             paragraphs: vec!["foo", "bar", "baz"]
                 .into_iter()
-                .map(|x| String::from(x))
+                .map(String::from)
                 .collect(),
         };
 

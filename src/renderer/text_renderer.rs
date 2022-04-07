@@ -10,16 +10,17 @@ use crate::util::{
 };
 use std::path::PathBuf;
 
+#[derive(Default)]
 pub struct TextRenderer;
 
 impl TextRenderer {
     pub fn new() -> TextRenderer {
-        TextRenderer
+        TextRenderer::default()
     }
 }
 
 impl Renderer<Resume, PathBuf> for TextRenderer {
-    fn render(self: &Self, element: &Resume, config: &Config) -> Result<PathBuf, String> {
+    fn render(&self, element: &Resume, config: &Config) -> Result<PathBuf, String> {
         let ext = String::from("txt");
 
         if let Some(c) = &element.cover_letter {
@@ -43,14 +44,14 @@ impl Renderer<Resume, PathBuf> for TextRenderer {
 }
 
 impl Renderer<Resume, String> for TextRenderer {
-    fn render(self: &Self, element: &Resume, config: &Config) -> Result<String, String> {
+    fn render(&self, element: &Resume, config: &Config) -> Result<String, String> {
         let mut text = centered_string(&element.name, config.format_config.text_config.width);
         text = format!(
             "{}\n\n{}",
             text,
-            self.render(&element.personal_info, &config)?
+            self.render(&element.personal_info, config)?
         );
-        text = format!("{}\n\n{}", text, self.render(&element.objective, &config)?);
+        text = format!("{}\n\n{}", text, self.render(&element.objective, config)?);
         text = format!(
             "{}\n\n{}",
             text,
@@ -75,7 +76,7 @@ impl Renderer<Resume, String> for TextRenderer {
 }
 
 impl Renderer<PersonalInfo, String> for TextRenderer {
-    fn render(self: &Self, element: &PersonalInfo, config: &Config) -> Result<String, String> {
+    fn render(&self, element: &PersonalInfo, config: &Config) -> Result<String, String> {
         let text = right_and_left_aligned(
             &element.github,
             &element.email,
@@ -86,7 +87,7 @@ impl Renderer<PersonalInfo, String> for TextRenderer {
 }
 
 impl Renderer<Objective, String> for TextRenderer {
-    fn render(self: &Self, element: &Objective, config: &Config) -> Result<String, String> {
+    fn render(&self, element: &Objective, config: &Config) -> Result<String, String> {
         let text = split_string_across_lines(
             &element.objective,
             config.format_config.text_config.width,
@@ -99,7 +100,7 @@ impl Renderer<Objective, String> for TextRenderer {
 
 impl Renderer<Vec<ProfessionalExperience>, String> for TextRenderer {
     fn render(
-        self: &Self,
+        &self,
         element: &Vec<ProfessionalExperience>,
         config: &Config,
     ) -> Result<String, String> {
@@ -109,9 +110,12 @@ impl Renderer<Vec<ProfessionalExperience>, String> for TextRenderer {
             .iter()
             .map(|e| self.render(e, config))
             .reduce(|a, b| Ok(format!("{}\n\n{}", a?, b?)))
-            .unwrap_or(Err(format!(
-                "An error occurred while rendering professional experience to plain text."
-            )))?;
+            .unwrap_or_else(|| {
+                Err(
+                    "An error occurred while rendering professional experience to plain text."
+                        .to_string(),
+                )
+            })?;
 
         text = format!("{}\n{}", text, exp);
 
@@ -120,11 +124,7 @@ impl Renderer<Vec<ProfessionalExperience>, String> for TextRenderer {
 }
 
 impl Renderer<ProfessionalExperience, String> for TextRenderer {
-    fn render(
-        self: &Self,
-        element: &ProfessionalExperience,
-        config: &Config,
-    ) -> Result<String, String> {
+    fn render(&self, element: &ProfessionalExperience, config: &Config) -> Result<String, String> {
         let mut text =
             if let (Some(org), Some(location)) = (&element.organization, &element.location) {
                 let text =
@@ -164,7 +164,7 @@ impl Renderer<ProfessionalExperience, String> for TextRenderer {
 }
 
 impl Renderer<OtherExperience, String> for TextRenderer {
-    fn render(self: &Self, element: &OtherExperience, config: &Config) -> Result<String, String> {
+    fn render(&self, element: &OtherExperience, config: &Config) -> Result<String, String> {
         let header = centered_string("PROJECTS", config.format_config.text_config.width);
         // todo: handle long lines?
         // todo: clean up?
@@ -173,16 +173,16 @@ impl Renderer<OtherExperience, String> for TextRenderer {
             .iter()
             .map(|s| self.render(s, config))
             .reduce(|a, b| Ok(format!("{}\n{}", a?, b?)))
-            .unwrap_or(Err(format!(
-                "An error occurred while rendering other experience to plain text."
-            )))?;
+            .unwrap_or_else(|| {
+                Err("An error occurred while rendering other experience to plain text.".to_string())
+            })?;
 
         Ok(format!("{}\n{}", header, projects))
     }
 }
 
 impl Renderer<ProjectInfo, String> for TextRenderer {
-    fn render(self: &Self, element: &ProjectInfo, config: &Config) -> Result<String, String> {
+    fn render(&self, element: &ProjectInfo, config: &Config) -> Result<String, String> {
         Ok(split_string_across_lines(
             &element.description,
             config.format_config.text_config.width,
@@ -193,7 +193,7 @@ impl Renderer<ProjectInfo, String> for TextRenderer {
 }
 
 impl Renderer<Technologies, String> for TextRenderer {
-    fn render(self: &Self, element: &Technologies, config: &Config) -> Result<String, String> {
+    fn render(&self, element: &Technologies, config: &Config) -> Result<String, String> {
         let header = centered_string("TECHNOLOGIES", config.format_config.text_config.width);
         let technologies = element.technologies.join(", ");
         let technologies = split_string_across_lines(
@@ -203,7 +203,7 @@ impl Renderer<Technologies, String> for TextRenderer {
             None,
         );
         let technologies = technologies
-            .split("\n")
+            .split('\n')
             .map(|x| centered_string(x, config.format_config.text_config.width))
             .collect::<Vec<String>>()
             .join("\n");
@@ -212,7 +212,7 @@ impl Renderer<Technologies, String> for TextRenderer {
 }
 
 impl Renderer<Education, String> for TextRenderer {
-    fn render(self: &Self, element: &Education, config: &Config) -> Result<String, String> {
+    fn render(&self, element: &Education, config: &Config) -> Result<String, String> {
         let mut text = centered_string("UNIVERSITY", config.format_config.text_config.width);
         text = format!(
             "{}\n{}",
@@ -237,7 +237,7 @@ impl Renderer<Education, String> for TextRenderer {
 }
 
 impl Renderer<CoverLetter, String> for TextRenderer {
-    fn render(self: &Self, element: &CoverLetter, config: &Config) -> Result<String, String> {
+    fn render(&self, element: &CoverLetter, config: &Config) -> Result<String, String> {
         let mut header = String::new();
         if let Some(name) = &element.name {
             header = format!("{}\n", name);

@@ -10,16 +10,17 @@ use crate::util::{
 };
 use std::path::PathBuf;
 
+#[derive(Default)]
 pub struct MarkdownRenderer;
 
 impl MarkdownRenderer {
     pub fn new() -> MarkdownRenderer {
-        MarkdownRenderer
+        MarkdownRenderer::default()
     }
 }
 
 impl Renderer<Resume, PathBuf> for MarkdownRenderer {
-    fn render(self: &Self, element: &Resume, config: &Config) -> Result<PathBuf, String> {
+    fn render(&self, element: &Resume, config: &Config) -> Result<PathBuf, String> {
         let s: String = self.render(element, config)?;
 
         write_string_to_file(
@@ -32,7 +33,7 @@ impl Renderer<Resume, PathBuf> for MarkdownRenderer {
 }
 
 impl Renderer<Resume, String> for MarkdownRenderer {
-    fn render(self: &Self, element: &Resume, config: &Config) -> Result<String, String> {
+    fn render(&self, element: &Resume, config: &Config) -> Result<String, String> {
         let mut text = format!("# {}", element.name);
         text = format!("{}\n\n{}", text, self.render(&element.objective, config)?);
         text = format!(
@@ -69,8 +70,8 @@ impl Renderer<Resume, String> for MarkdownRenderer {
 }
 
 impl Renderer<PersonalInfo, String> for MarkdownRenderer {
-    fn render(self: &Self, element: &PersonalInfo, config: &Config) -> Result<String, String> {
-        let mut text = format!("## Find me here");
+    fn render(&self, element: &PersonalInfo, config: &Config) -> Result<String, String> {
+        let mut text = "## Find me here".to_string();
         text = format!(
             "{}\n- Email: [{}](mailto:{})",
             text, element.email, element.email
@@ -90,10 +91,12 @@ impl Renderer<PersonalInfo, String> for MarkdownRenderer {
                     .iter()
                     .map(|e| self.render(e, config))
                     .reduce(|a, b| Ok(format!("{}\n{}", a?, b?)))
-                    .unwrap_or(Err(String::from(
-                        "An error occurred while rendering personal info to markdown",
-                    )));
-                Ok(info?)
+                    .unwrap_or_else(|| {
+                        Err(String::from(
+                            "An error occurred while rendering personal info to markdown",
+                        ))
+                    });
+                info
             });
 
         if let Some(other_info) = other_info {
@@ -105,11 +108,7 @@ impl Renderer<PersonalInfo, String> for MarkdownRenderer {
 }
 
 impl Renderer<OtherPersonalInfo, String> for MarkdownRenderer {
-    fn render(
-        self: &Self,
-        element: &OtherPersonalInfo,
-        _config: &Config,
-    ) -> Result<String, String> {
+    fn render(&self, element: &OtherPersonalInfo, _config: &Config) -> Result<String, String> {
         if let Some(url) = &element.url {
             Ok(format!(
                 "- {}: [{}]({})",
@@ -124,34 +123,33 @@ impl Renderer<OtherPersonalInfo, String> for MarkdownRenderer {
 }
 
 impl Renderer<Objective, String> for MarkdownRenderer {
-    fn render(self: &Self, element: &Objective, config: &Config) -> Result<String, String> {
-        Ok(format!(
-            "{}",
-            split_string_across_lines(
-                &element.objective,
-                config.format_config.markdown_config.width,
-                None,
-                None
-            )
+    fn render(&self, element: &Objective, config: &Config) -> Result<String, String> {
+        Ok(split_string_across_lines(
+            &element.objective,
+            config.format_config.markdown_config.width,
+            None,
+            None,
         ))
     }
 }
 
 impl Renderer<Vec<ProfessionalExperience>, String> for MarkdownRenderer {
     fn render(
-        self: &Self,
+        &self,
         element: &Vec<ProfessionalExperience>,
         config: &Config,
     ) -> Result<String, String> {
-        let mut text = format!("## Experience");
+        let mut text = "## Experience".to_string();
 
         let exp = element
             .iter()
             .map(|e| self.render(e, config))
             .reduce(|a, b| Ok(format!("{}\n\n{}", a?, b?)))
-            .unwrap_or(Err(String::from(
-                "An error occurred while rendering professional experience to markdown.",
-            )))?;
+            .unwrap_or_else(|| {
+                Err(String::from(
+                    "An error occurred while rendering professional experience to markdown.",
+                ))
+            })?;
 
         text = format!("{}\n{}", text, exp);
 
@@ -160,11 +158,7 @@ impl Renderer<Vec<ProfessionalExperience>, String> for MarkdownRenderer {
 }
 
 impl Renderer<ProfessionalExperience, String> for MarkdownRenderer {
-    fn render(
-        self: &Self,
-        element: &ProfessionalExperience,
-        config: &Config,
-    ) -> Result<String, String> {
+    fn render(&self, element: &ProfessionalExperience, config: &Config) -> Result<String, String> {
         let mut text =
             if let (Some(org), Some(location)) = (&element.organization, &element.location) {
                 format!("### {} - {}", org, location)
@@ -190,9 +184,11 @@ impl Renderer<ProfessionalExperience, String> for MarkdownRenderer {
                 ))
             })
             .reduce(|a, b| Ok(format!("{}\n{}", a?, b?)))
-            .unwrap_or(Err(String::from(
-                "An error occurred while rendering professional experience to markdown.",
-            )))?;
+            .unwrap_or_else(|| {
+                Err(String::from(
+                    "An error occurred while rendering professional experience to markdown.",
+                ))
+            })?;
 
         text = format!("{}\n{}", text, exp);
 
@@ -201,8 +197,8 @@ impl Renderer<ProfessionalExperience, String> for MarkdownRenderer {
 }
 
 impl Renderer<OtherExperience, String> for MarkdownRenderer {
-    fn render(self: &Self, element: &OtherExperience, config: &Config) -> Result<String, String> {
-        let mut text = format!("## Projects");
+    fn render(&self, element: &OtherExperience, config: &Config) -> Result<String, String> {
+        let mut text = "## Projects".to_string();
 
         // todo: clean up?
         let projects = element
@@ -210,9 +206,9 @@ impl Renderer<OtherExperience, String> for MarkdownRenderer {
             .into_iter()
             .map(|e| self.render(e, config))
             .reduce(|a, b| Ok(format!("{}\n{}", a?, b?)))
-            .unwrap_or(Err(format!(
-                "An error occurred while rendering other experience to markdown."
-            )))?;
+            .unwrap_or_else(|| {
+                Err("An error occurred while rendering other experience to markdown.".to_string())
+            })?;
 
         text = format!("{}\n{}", text, projects);
 
@@ -221,7 +217,7 @@ impl Renderer<OtherExperience, String> for MarkdownRenderer {
 }
 
 impl Renderer<ProjectInfo, String> for MarkdownRenderer {
-    fn render(self: &Self, element: &ProjectInfo, config: &Config) -> Result<String, String> {
+    fn render(&self, element: &ProjectInfo, config: &Config) -> Result<String, String> {
         let project_info = format!(
             "[{}]({}) - {}",
             element.project_name,
@@ -238,7 +234,7 @@ impl Renderer<ProjectInfo, String> for MarkdownRenderer {
 }
 
 impl Renderer<Technologies, String> for MarkdownRenderer {
-    fn render(self: &Self, element: &Technologies, _config: &Config) -> Result<String, String> {
+    fn render(&self, element: &Technologies, _config: &Config) -> Result<String, String> {
         Ok(format!(
             "## Technologies\n{}",
             element.technologies.join(", ")
@@ -247,7 +243,7 @@ impl Renderer<Technologies, String> for MarkdownRenderer {
 }
 
 impl Renderer<Education, String> for MarkdownRenderer {
-    fn render(self: &Self, element: &Education, _config: &Config) -> Result<String, String> {
+    fn render(&self, element: &Education, _config: &Config) -> Result<String, String> {
         let mut text = format!("## University\n### {}", element.school);
         text = format!(
             "{}\n```\n{}\n{}\n{}\n```",

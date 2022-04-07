@@ -5,20 +5,19 @@ use crate::renderer::Renderer;
 use crate::util::{add_https_to_url, write_string_to_file, FooterText};
 use std::path::PathBuf;
 
+#[derive(Default)]
 pub struct GitHubRenderer {
     md: MarkdownRenderer,
 }
 
 impl GitHubRenderer {
     pub fn new() -> GitHubRenderer {
-        GitHubRenderer {
-            md: MarkdownRenderer::new(),
-        }
+        GitHubRenderer::default()
     }
 }
 
 impl Renderer<Resume, PathBuf> for GitHubRenderer {
-    fn render(self: &Self, element: &Resume, config: &Config) -> Result<PathBuf, String> {
+    fn render(&self, element: &Resume, config: &Config) -> Result<PathBuf, String> {
         let s: String = self.render(element, config)?;
 
         write_string_to_file(
@@ -31,7 +30,7 @@ impl Renderer<Resume, PathBuf> for GitHubRenderer {
 }
 
 impl Renderer<Resume, String> for GitHubRenderer {
-    fn render(self: &Self, element: &Resume, config: &Config) -> Result<String, String> {
+    fn render(&self, element: &Resume, config: &Config) -> Result<String, String> {
         let mut text = format!("# {}", element.name);
         text = format!("{}\n\n{}", text, self.render(&element.objective, config)?);
         text = format!(
@@ -60,13 +59,13 @@ impl Renderer<Resume, String> for GitHubRenderer {
 }
 
 impl Renderer<PersonalInfo, String> for GitHubRenderer {
-    fn render(self: &Self, element: &PersonalInfo, config: &Config) -> Result<String, String> {
+    fn render(&self, element: &PersonalInfo, config: &Config) -> Result<String, String> {
         let info = self.md.render(element, config)?;
         // Don't want to display email or linkedin on GitHub
         // todo: enable configuring what to display in the toml
         // todo: is there a way to do this without using 'to_owned'?
         let info = info
-            .split("\n")
+            .split('\n')
             .map(|x| x.to_owned())
             .filter(|x| !x.contains(&element.email))
             .filter(|x| !x.to_lowercase().contains("linkedin"))
@@ -77,14 +76,14 @@ impl Renderer<PersonalInfo, String> for GitHubRenderer {
 }
 
 impl Renderer<Objective, String> for GitHubRenderer {
-    fn render(self: &Self, element: &Objective, config: &Config) -> Result<String, String> {
+    fn render(&self, element: &Objective, config: &Config) -> Result<String, String> {
         self.md.render(element, config)
     }
 }
 
 impl Renderer<OtherExperience, String> for GitHubRenderer {
-    fn render(self: &Self, element: &OtherExperience, config: &Config) -> Result<String, String> {
-        let mut text = format!("## Projects");
+    fn render(&self, element: &OtherExperience, config: &Config) -> Result<String, String> {
+        let mut text = "## Projects".to_string();
 
         // todo: clean up?
         let projects = element
@@ -92,9 +91,9 @@ impl Renderer<OtherExperience, String> for GitHubRenderer {
             .into_iter()
             .map(|e| self.render(e, config))
             .reduce(|a, b| Ok(format!("{}\n{}", a?, b?)))
-            .unwrap_or(Err(format!(
-                "An error occurred while rendering other experience to markdown."
-            )))?;
+            .unwrap_or_else(|| {
+                Err("An error occurred while rendering other experience to markdown.".to_string())
+            })?;
 
         text = format!("{}\n{}", text, projects);
 
@@ -103,13 +102,13 @@ impl Renderer<OtherExperience, String> for GitHubRenderer {
 }
 
 impl Renderer<ProjectInfo, String> for GitHubRenderer {
-    fn render(self: &Self, element: &ProjectInfo, config: &Config) -> Result<String, String> {
+    fn render(&self, element: &ProjectInfo, config: &Config) -> Result<String, String> {
         self.md.render(element, config)
     }
 }
 
 impl Renderer<Technologies, String> for GitHubRenderer {
-    fn render(self: &Self, element: &Technologies, config: &Config) -> Result<String, String> {
+    fn render(&self, element: &Technologies, config: &Config) -> Result<String, String> {
         self.md.render(element, config)
     }
 }
