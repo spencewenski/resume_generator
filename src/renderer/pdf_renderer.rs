@@ -109,8 +109,10 @@ impl Renderer<Resume, Document> for PdfRenderer {
         // We want everything to be flush to the left side (except for a few outliers)
         doc.push(Element::UserDefined(String::from("\\begin{flushleft}")));
         {
-            doc.push_doc(&self.render(&element.objective, config)?);
-            doc.push_doc(&vspace());
+            if let Some(obj) = &element.objective {
+                doc.push_doc(&self.render(obj, config)?);
+                doc.push_doc(&vspace());
+            }
             doc.push_doc(&self.render(&element.professional_experience, config)?);
             if let Some(e) = &element.other_experience {
                 doc.push_doc(&vspace());

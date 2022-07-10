@@ -45,7 +45,7 @@ impl Resume {
 pub struct Resume {
     pub name: String,
     pub personal_info: PersonalInfo,
-    pub objective: Objective,
+    pub objective: Option<Objective>,
     pub professional_experience: Vec<ProfessionalExperience>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub education: Option<Education>,
@@ -182,7 +182,7 @@ mod test {
         assert_eq!(personal_info[1].item, String::from("Bar"));
         assert!(personal_info[1].url.is_none());
 
-        assert_eq!(resume.objective.objective, "objective");
+        assert_eq!(resume.objective.unwrap().objective, "objective");
 
         assert_eq!(resume.professional_experience.len(), 2);
         assert_eq!(

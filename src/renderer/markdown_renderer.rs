@@ -35,7 +35,9 @@ impl Renderer<Resume, PathBuf> for MarkdownRenderer {
 impl Renderer<Resume, String> for MarkdownRenderer {
     fn render(&self, element: &Resume, config: &Config) -> Result<String, String> {
         let mut text = format!("# {}", element.name);
-        text = format!("{}\n\n{}", text, self.render(&element.objective, config)?);
+        if let Some(obj) = &element.objective {
+            text = format!("{}\n\n{}", text, self.render(obj, config)?);
+        }
         text = format!(
             "{}\n\n{}",
             text,

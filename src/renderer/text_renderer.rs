@@ -51,7 +51,9 @@ impl Renderer<Resume, String> for TextRenderer {
             text,
             self.render(&element.personal_info, config)?
         );
-        text = format!("{}\n\n{}", text, self.render(&element.objective, config)?);
+        if let Some(obj) = &element.objective {
+            text = format!("{}\n\n{}", text, self.render(obj, config)?);
+        }
         text = format!(
             "{}\n\n{}",
             text,
