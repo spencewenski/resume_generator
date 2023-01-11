@@ -8,6 +8,11 @@ curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 # LaTeX
 ## Arch linux
 sudo pacman -Sy texlive-core
+## Nix env
+## Note: This will add texlive globally the current user's env. See the Nix docs for other
+## installation methods if this is not desired.
+## Note: There are other TexLive packages that may work as well: https://nixos.wiki/wiki/TexLive
+nix-env -iA nixpkgs.texlive.combined.scheme-small
 ## Mac - also may need to add pdflatex to path (located in /Library/TeX/texbin)
 brew install --cask basictex
 ## Ubuntu
