@@ -216,26 +216,23 @@ impl Renderer<Technologies, String> for TextRenderer {
 
 impl Renderer<Education, String> for TextRenderer {
     fn render(&self, element: &Education, config: &Config) -> Result<String, String> {
-        let mut text = centered_string("UNIVERSITY", config.format_config.text_config.width);
-        text = format!(
-            "{}\n{}",
-            text,
-            right_and_left_aligned(
-                &element.school,
-                Some(&element.location),
-                config.format_config.text_config.width
+        let title = centered_string("UNIVERSITY", config.format_config.text_config.width);
+        let education = if element.graduation.is_some() {
+            format!(
+                "{} - {} - {} - {}",
+                element.school,
+                element.location,
+                element.major,
+                element.graduation.as_ref().unwrap()
             )
-        );
-        text = format!(
-            "{}\n{}",
-            text,
-            right_and_left_aligned(
-                &element.major,
-                element.graduation.as_deref(),
-                config.format_config.text_config.width
+        } else {
+            format!(
+                "{} - {} - {}",
+                element.school, element.location, element.major
             )
-        );
-        Ok(text)
+        };
+        let education = centered_string(&education, config.format_config.text_config.width);
+        Ok(format!("{}\n{}", title, education))
     }
 }
 

@@ -266,22 +266,24 @@ impl Renderer<Education, Document> for PdfRenderer {
     fn render(&self, element: &Education, _config: &Config) -> Result<Document, String> {
         let mut doc = Document::default();
         doc.push_doc(&section_header("UNIVERSITY"));
-        doc.push(Element::UserDefined(format!(
-            "{{\\bf {}}} \\hfill {}\n",
-            element.school, element.location
-        )));
-        if element.graduation.is_some() {
-            doc.push(Element::UserDefined(format!(
-                "\\emph{{{}}} \\hfill {}\n",
+        let education = if element.graduation.is_some() {
+            format!(
+                "{} -- {} -- {} -- {}",
+                element.school,
+                element.location,
                 element.major,
                 element.graduation.as_ref().unwrap()
-            )));
+            )
         } else {
-            doc.push(Element::UserDefined(format!(
-                "\\emph{{{}}}\n",
-                element.major
-            )));
-        }
+            format!(
+                "{} -- {} -- {}",
+                element.school, element.location, element.major
+            )
+        };
+        doc.push(Element::Environment(
+            String::from("center"),
+            vec![education],
+        ));
         Ok(doc)
     }
 }
