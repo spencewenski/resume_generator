@@ -9,7 +9,6 @@ use crate::util::{
     write_string_to_path, FooterText,
 };
 use latex::{print, Document, Element, Paragraph, PreambleElement};
-use std::borrow::BorrowMut;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
@@ -212,7 +211,7 @@ impl Renderer<ProfessionalExperience, Document> for PdfRenderer {
             .iter()
             .map(|e| format!("\\item {}", e))
             .collect::<Vec<String>>();
-        itemize_content.append(exp.borrow_mut());
+        itemize_content.append(&mut exp);
         doc.push(Element::Environment(
             String::from("itemize"),
             itemize_content,
@@ -233,7 +232,7 @@ impl Renderer<OtherExperience, Document> for PdfRenderer {
             .into_iter()
             .map(|e| self.render(e, config).unwrap_or_default())
             .collect::<Vec<String>>();
-        itemize_content.append(projects.borrow_mut());
+        itemize_content.append(&mut projects);
         doc.push(Element::Environment(
             String::from("itemize"),
             itemize_content,
@@ -271,10 +270,18 @@ impl Renderer<Education, Document> for PdfRenderer {
             "{{\\bf {}}} \\hfill {}\n",
             element.school, element.location
         )));
-        doc.push(Element::UserDefined(format!(
-            "\\emph{{{}}} \\hfill {}\n",
-            element.major, element.graduation
-        )));
+        if element.graduation.is_some() {
+            doc.push(Element::UserDefined(format!(
+                "\\emph{{{}}} \\hfill {}\n",
+                element.major,
+                element.graduation.as_ref().unwrap()
+            )));
+        } else {
+            doc.push(Element::UserDefined(format!(
+                "\\emph{{{}}}\n",
+                element.major
+            )));
+        }
         Ok(doc)
     }
 }
@@ -555,7 +562,7 @@ mod test {
             school: String::from("school"),
             location: String::from("location"),
             major: String::from("major"),
-            graduation: String::from("graduation"),
+            graduation: Some(String::from("graduation")),
             ..Default::default()
         };
 

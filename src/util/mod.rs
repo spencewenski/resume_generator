@@ -50,7 +50,7 @@ pub fn write_string_to_path(s: &str, path: &Path) -> Result<PathBuf, String> {
             e
         )
     })?;
-    fs::write(&path, s).map_err(|e| {
+    fs::write(path, s).map_err(|e| {
         format!(
             "An error occurred while writing file [{}]: {}",
             path.display(),

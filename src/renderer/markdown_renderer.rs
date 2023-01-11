@@ -247,10 +247,20 @@ impl Renderer<Technologies, String> for MarkdownRenderer {
 impl Renderer<Education, String> for MarkdownRenderer {
     fn render(&self, element: &Education, _config: &Config) -> Result<String, String> {
         let mut text = format!("## University\n### {}", element.school);
-        text = format!(
-            "{}\n```\n{}\n{}\n{}\n```",
-            text, element.major, element.graduation, element.location
-        );
+        if element.graduation.is_some() {
+            text = format!(
+                "{}\n```\n{}\n{}\n{}\n```",
+                text,
+                element.major,
+                element.graduation.as_ref().unwrap(),
+                element.location
+            );
+        } else {
+            text = format!(
+                "{}\n```\n{}\n{}\n```",
+                text, element.major, element.location
+            );
+        }
         Ok(text)
     }
 }
@@ -404,7 +414,7 @@ mod test {
             school: String::from("school"),
             location: String::from("location"),
             major: String::from("major"),
-            graduation: String::from("graduation"),
+            graduation: Some(String::from("graduation")),
             ..Default::default()
         };
 

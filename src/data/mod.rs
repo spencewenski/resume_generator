@@ -98,7 +98,7 @@ pub struct Education {
     pub school: String,
     pub location: String,
     pub major: String,
-    pub graduation: String,
+    pub graduation: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub extras: Option<Vec<String>>,
 }
@@ -242,7 +242,7 @@ mod test {
         assert_eq!(education.school, String::from("school"));
         assert_eq!(education.location, String::from("location"));
         assert_eq!(education.major, String::from("major"));
-        assert_eq!(education.graduation, String::from("graduation"));
+        assert_eq!(education.graduation, Some(String::from("graduation")));
         assert_eq!(
             education.extras,
             Some(vec![

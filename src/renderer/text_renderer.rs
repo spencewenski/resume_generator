@@ -81,7 +81,7 @@ impl Renderer<PersonalInfo, String> for TextRenderer {
     fn render(&self, element: &PersonalInfo, config: &Config) -> Result<String, String> {
         let text = right_and_left_aligned(
             &element.github,
-            &element.email,
+            Some(&element.email),
             config.format_config.text_config.width,
         );
         Ok(text)
@@ -127,20 +127,21 @@ impl Renderer<Vec<ProfessionalExperience>, String> for TextRenderer {
 
 impl Renderer<ProfessionalExperience, String> for TextRenderer {
     fn render(&self, element: &ProfessionalExperience, config: &Config) -> Result<String, String> {
-        let mut text =
-            if let (Some(org), Some(location)) = (&element.organization, &element.location) {
-                let text =
-                    right_and_left_aligned(org, location, config.format_config.text_config.width);
-                format!("{}\n", text)
-            } else {
-                String::new()
-            };
+        let mut text = if let (Some(org), Some(location)) =
+            (&element.organization, &element.location)
+        {
+            let text =
+                right_and_left_aligned(org, Some(location), config.format_config.text_config.width);
+            format!("{}\n", text)
+        } else {
+            String::new()
+        };
         text = format!(
             "{}{}",
             text,
             right_and_left_aligned(
                 &element.position,
-                &time_range_string(&element.start, &element.end),
+                Some(&time_range_string(&element.start, &element.end)),
                 config.format_config.text_config.width
             )
         );
@@ -221,7 +222,7 @@ impl Renderer<Education, String> for TextRenderer {
             text,
             right_and_left_aligned(
                 &element.school,
-                &element.location,
+                Some(&element.location),
                 config.format_config.text_config.width
             )
         );
@@ -230,7 +231,7 @@ impl Renderer<Education, String> for TextRenderer {
             text,
             right_and_left_aligned(
                 &element.major,
-                &element.graduation,
+                element.graduation.as_deref(),
                 config.format_config.text_config.width
             )
         );
@@ -277,13 +278,17 @@ fn centered_string(s: &str, width: usize) -> String {
     format!("{s:>width$}", s = s, width = (width / 2) + (s.len() / 2))
 }
 
-fn right_and_left_aligned(l: &str, r: &str, width: usize) -> String {
-    format!(
-        "{left}{right:>width$}",
-        left = l,
-        right = r,
-        width = width - l.len()
-    )
+fn right_and_left_aligned(l: &str, r: Option<&str>, width: usize) -> String {
+    if r.is_some() {
+        format!(
+            "{left}{right:>width$}",
+            left = l,
+            right = r.unwrap(),
+            width = width - l.len()
+        )
+    } else {
+        l.to_string()
+    }
 }
 
 #[cfg(test)]
@@ -446,7 +451,7 @@ positionB                            startB - endB
             school: String::from("school"),
             location: String::from("location"),
             major: String::from("major"),
-            graduation: String::from("graduation"),
+            graduation: Some(String::from("graduation")),
             ..Default::default()
         };
 
