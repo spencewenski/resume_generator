@@ -457,8 +457,7 @@ positionB                            startB - endB
         assert_eq!(
             rendered,
             "                    UNIVERSITY
-school                                    location
-major                                   graduation"
+      school - location - major - graduation"
         );
     }
 

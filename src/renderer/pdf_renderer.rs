@@ -573,7 +573,7 @@ mod test {
 
         assert_eq!(
             rendered,
-            "\\documentclass{article}\n\\begin{document}\n\\addtolength{\\parskip}{ -0.1in }\n\\begin{center}\n{\\bf UNIVERSITY}\n\\end{center}\n\\addtolength{\\parskip}{ 0.1in }\n{\\bf school} \\hfill location\n\n\\emph{major} \\hfill graduation\n\n\\end{document}\n"
+            "\\documentclass{article}\n\\begin{document}\n\\addtolength{\\parskip}{ -0.1in }\n\\begin{center}\n{\\bf UNIVERSITY}\n\\end{center}\n\\addtolength{\\parskip}{ 0.1in }\n\\begin{center}\nschool -- location -- major -- graduation\n\\end{center}\n\\end{document}\n"
         );
     }
 
