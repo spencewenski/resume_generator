@@ -244,7 +244,10 @@ impl Renderer<OtherExperience, Document> for PdfRenderer {
 
 impl Renderer<ProjectInfo, String> for PdfRenderer {
     fn render(&self, element: &ProjectInfo, _config: &Config) -> Result<String, String> {
-        Ok(format!("\\item {}\n", element.description))
+        Ok(format!(
+            "\\item \\href{{{}}}{{{}}}: {}\n",
+            element.url, element.project_name, element.description
+        ))
     }
 }
 
@@ -358,6 +361,7 @@ fn document_preamble(config: &Config, include_footer: bool) -> Document {
         })
         // Set up the footer and remove the header
         .use_package("fancyhdr")
+        .use_package("hyperref")
         .push(PreambleElement::UserDefined(String::from("\\fancyhf{}")))
         .push(PreambleElement::UserDefined(String::from(
             r"\pagestyle{fancy}",
