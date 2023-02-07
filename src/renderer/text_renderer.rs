@@ -8,6 +8,7 @@ use crate::util::{
     cover_letter_file_name, date_string, split_string_across_lines, time_range_string,
     write_string_to_file, FooterText,
 };
+use std::ops::Deref;
 use std::path::PathBuf;
 
 #[derive(Default)]
@@ -172,9 +173,9 @@ impl Renderer<OtherExperience, String> for TextRenderer {
         // todo: handle long lines?
         // todo: clean up?
         let projects = element
-            .projects
+            .get_projects_for_resume()
             .iter()
-            .map(|s| self.render(s, config))
+            .map(|s| self.render(s.deref(), config))
             .reduce(|a, b| Ok(format!("{}\n{}", a?, b?)))
             .unwrap_or_else(|| {
                 Err("An error occurred while rendering other experience to plain text.".to_string())
@@ -187,7 +188,7 @@ impl Renderer<OtherExperience, String> for TextRenderer {
 impl Renderer<ProjectInfo, String> for TextRenderer {
     fn render(&self, element: &ProjectInfo, config: &Config) -> Result<String, String> {
         Ok(split_string_across_lines(
-            &element.description,
+            &format!("{}: {}", &element.project_name, &element.description),
             config.format_config.text_config.width,
             Some(String::from("- ")),
             Some(String::from("  ")),
@@ -380,18 +381,21 @@ positionB                            startB - endB
             project_name: String::from("project_nameA"),
             description: String::from("descriptionA"),
             url: String::from("example.com"),
+            include_on_resume: true,
             ..Default::default()
         };
         let b = ProjectInfo {
             project_name: String::from("project_nameB"),
             description: String::from("Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut"),
             url: String::from("example.com"),
+            include_on_resume: true,
             ..Default::default()
         };
         let c = ProjectInfo {
             project_name: String::from("project_nameC"),
             description: String::from("descriptionC"),
             url: String::from("example.com"),
+            include_on_resume: false,
             ..Default::default()
         };
         let x = OtherExperience {
@@ -403,11 +407,10 @@ positionB                            startB - endB
         assert_eq!(
             rendered,
             "                     PROJECTS
-- descriptionA
-- Lorem ipsum dolor sit amet, consectetur
-  adipiscing elit, sed do eiusmod tempor
-  incididunt ut
-- descriptionC"
+- project_nameA: descriptionA
+- project_nameB: Lorem ipsum dolor sit amet,
+  consectetur adipiscing elit, sed do eiusmod
+  tempor incididunt ut"
         );
     }
 

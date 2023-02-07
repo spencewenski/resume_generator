@@ -517,7 +517,7 @@ mod test {
             project_name: String::from("project_nameC"),
             description: String::from("descriptionC"),
             url: String::from("example.com"),
-            include_on_resume: true,
+            include_on_resume: false,
             ..Default::default()
         };
         let x = OtherExperience {
@@ -529,7 +529,7 @@ mod test {
 
         assert_eq!(
             rendered,
-            "\\documentclass{article}\n\\begin{document}\n\\addtolength{\\parskip}{ -0.1in }\n\\begin{center}\n{\\bf PROJECTS}\n\\end{center}\n\\addtolength{\\parskip}{ 0.1in }\n\\begin{itemize}\n\\setlength\\itemsep{-0.05in}\n\\item descriptionA\n\n\\item Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut\n\n\\item descriptionC\n\n\\end{itemize}\n\\end{document}\n"
+            "\\documentclass{article}\n\\begin{document}\n\\addtolength{\\parskip}{ -0.1in }\n\\begin{center}\n{\\bf PROJECTS}\n\\end{center}\n\\addtolength{\\parskip}{ 0.1in }\n\\begin{itemize}\n\\setlength\\itemsep{-0.05in}\n\\item \\href{example.com}{project_nameA}: descriptionA\n\n\\item \\href{example.com}{project_nameB}: Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut\n\n\\end{itemize}\n\\end{document}\n"
         );
     }
 
@@ -597,7 +597,7 @@ mod test {
         let rendered = PdfRenderer::new().render(&x, &get_config()).unwrap();
         let rendered = print(&rendered).unwrap();
 
-        let expected_prefix = "\\documentclass{article}\n\\usepackage[margin=0.75in]{geometry}\n\\usepackage[T1]{fontenc}\n\\usepackage{fancyhdr}\n\\fancyhf{}\n\\pagestyle{fancy}\n\\renewcommand{\\headrulewidth}{0pt}\n\\begin{document}\n\\setlength\\parindent{0pt}\nFoo Bar\n\nfoo@bar.com\n\n";
+        let expected_prefix = "\\documentclass{article}\n\\usepackage[margin=0.75in]{geometry}\n\\usepackage[T1]{fontenc}\n\\usepackage{fancyhdr}\n\\usepackage{hyperref}\n\\fancyhf{}\n\\pagestyle{fancy}\n\\renewcommand{\\headrulewidth}{0pt}\n\\begin{document}\n\\setlength\\parindent{0pt}\nFoo Bar\n\nfoo@bar.com\n\n";
         let expected_suffix = "\n\n\\setlength\\parskip{2em}\nHello,\n\n\\setlength\\parskip{1em}\nfoo\n\nbar\n\nbaz\n\n\\setlength\\parskip{2em}\nFrom,\n\n\\setlength\\parskip{0em}\nFoo Bar\n\n\\end{document}\n";
         let expected = format!("{}{}{}", expected_prefix, date_string(), expected_suffix);
         assert_eq!(rendered, expected);
