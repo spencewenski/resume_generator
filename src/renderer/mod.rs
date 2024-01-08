@@ -17,10 +17,10 @@ trait Renderer<I, O> {
 
 pub fn render_resume(resume: &Resume, config: &Config) -> Result<(), String> {
     let renderers: Vec<Box<dyn Renderer<Resume, PathBuf>>> = vec![
-        Box::new(TextRenderer::default()),
-        Box::new(PdfRenderer::default()),
-        Box::new(MarkdownRenderer::default()),
-        Box::new(GitHubRenderer::default()),
+        Box::<TextRenderer>::default(),
+        Box::<PdfRenderer>::default(),
+        Box::<MarkdownRenderer>::default(),
+        Box::<GitHubRenderer>::default(),
     ];
     renderers.iter().try_for_each(|x| -> Result<(), String> {
         x.render(resume, config)?;

@@ -15,7 +15,7 @@ pub struct MarkdownRenderer;
 
 impl MarkdownRenderer {
     pub fn new() -> MarkdownRenderer {
-        MarkdownRenderer::default()
+        MarkdownRenderer
     }
 }
 

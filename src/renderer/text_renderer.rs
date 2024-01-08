@@ -8,7 +8,6 @@ use crate::util::{
     cover_letter_file_name, date_string, split_string_across_lines, time_range_string,
     write_string_to_file, FooterText,
 };
-use std::ops::Deref;
 use std::path::PathBuf;
 
 #[derive(Default)]
@@ -16,7 +15,7 @@ pub struct TextRenderer;
 
 impl TextRenderer {
     pub fn new() -> TextRenderer {
-        TextRenderer::default()
+        TextRenderer
     }
 }
 

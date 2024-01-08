@@ -17,7 +17,7 @@ pub struct PdfRenderer;
 
 impl PdfRenderer {
     pub fn new() -> PdfRenderer {
-        PdfRenderer::default()
+        PdfRenderer
     }
 }
 
