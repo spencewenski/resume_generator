@@ -175,7 +175,7 @@ impl Renderer<OtherExperience, String> for TextRenderer {
         let projects = element
             .get_projects_for_resume()
             .iter()
-            .map(|s| self.render(s.deref(), config))
+            .map(|s| self.render(*s, config))
             .reduce(|a, b| Ok(format!("{}\n{}", a?, b?)))
             .unwrap_or_else(|| {
                 Err("An error occurred while rendering other experience to plain text.".to_string())
