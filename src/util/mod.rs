@@ -80,32 +80,6 @@ pub fn time_range_string(start: &str, end: &str) -> String {
     format!("{} - {}", start, end)
 }
 
-pub struct FooterText {
-    pub basic_text: String,
-    pub prefix: String,
-    pub url: String,
-}
-
-impl FooterText {
-    pub fn new() -> FooterText {
-        let prefix = format!("Updated on {} using", date_string());
-        // todo: make this url configurable somehow
-        let url = String::from("github.com/spencewenski/resume_generator");
-        let basic_text = format!("{} {}", prefix, url);
-        FooterText {
-            basic_text,
-            prefix,
-            url,
-        }
-    }
-}
-
-impl Default for FooterText {
-    fn default() -> Self {
-        FooterText::new()
-    }
-}
-
 pub fn date_string() -> String {
     let now = Local::now();
     format!(
@@ -175,9 +149,7 @@ mod test {
     use crate::util::{
         add_https_to_url, cover_letter_file_name, escape_special_chars, get_path,
         split_string_across_lines, string_from_file, time_range_string, toml_from_string,
-        FooterText,
     };
-    use chrono::{Datelike, Local};
 
     #[test]
     fn test_string_from_file() {
@@ -205,7 +177,7 @@ mod test {
     #[test]
     fn test_toml_from_string() {
         let s = string_from_file("tst/test_simple_toml.toml").unwrap();
-        let t: TestToml = toml_from_string(&*s).unwrap();
+        let t: TestToml = toml_from_string(&s).unwrap();
 
         assert_eq!(t.foo, String::from("bar"));
         assert_eq!(t.baz.things, String::from("stuff"));
@@ -271,21 +243,6 @@ mod test {
     fn test_time_range_string() {
         let s = time_range_string("foo", "bar");
         assert_eq!(s, "foo - bar");
-    }
-
-    #[test]
-    fn test_footer_text() {
-        let f = FooterText::new();
-        assert_eq!(f.url, "github.com/spencewenski/resume_generator");
-        let now = Local::now();
-        let prefix = format!(
-            "Updated on {day} {month} {year} using",
-            day = now.day(),
-            month = now.format("%B"),
-            year = now.year()
-        );
-        assert_eq!(f.prefix, prefix);
-        assert_eq!(f.basic_text, format!("{} {}", prefix, f.url));
     }
 
     #[test]

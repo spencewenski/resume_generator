@@ -6,7 +6,7 @@ use crate::data::{
 use crate::renderer::Renderer;
 use crate::util::{
     cover_letter_file_name, date_string, escape_special_chars, get_path, time_range_string,
-    write_string_to_path, FooterText,
+    write_string_to_path,
 };
 use latex::{print, Document, Element, Paragraph, PreambleElement};
 use std::path::{Path, PathBuf};
@@ -94,7 +94,7 @@ impl Renderer<CoverLetter, String> for PdfRenderer {
 
 impl Renderer<Resume, Document> for PdfRenderer {
     fn render(&self, element: &Resume, config: &Config) -> Result<Document, String> {
-        let mut doc = document_preamble(config, false);
+        let mut doc = document_preamble(config);
 
         // Name
         doc.push(Element::Environment(
@@ -293,7 +293,7 @@ impl Renderer<Education, Document> for PdfRenderer {
 
 impl Renderer<CoverLetter, Document> for PdfRenderer {
     fn render(&self, element: &CoverLetter, config: &Config) -> Result<Document, String> {
-        let mut doc = document_preamble(config, false);
+        let mut doc = document_preamble(config);
 
         doc.push(Element::UserDefined(String::from(
             "\\setlength\\parindent{0pt}",
@@ -346,7 +346,7 @@ impl Renderer<CoverLetter, Document> for PdfRenderer {
     }
 }
 
-fn document_preamble(config: &Config, include_footer: bool) -> Document {
+fn document_preamble(config: &Config) -> Document {
     let mut doc = Document::default();
     doc.preamble
         // Set the margins
@@ -369,12 +369,6 @@ fn document_preamble(config: &Config, include_footer: bool) -> Document {
         .push(PreambleElement::UserDefined(String::from(
             r"\renewcommand{\headrulewidth}{0pt}",
         )));
-    if include_footer {
-        doc.preamble.push(PreambleElement::UserDefined(format!(
-            "\\cfoot{{{}}}",
-            escape_special_chars(&FooterText::new().basic_text)
-        )));
-    }
     doc
 }
 

@@ -2,7 +2,7 @@ use crate::config::Config;
 use crate::data::{Objective, OtherExperience, PersonalInfo, ProjectInfo, Resume, Technologies};
 use crate::renderer::markdown_renderer::MarkdownRenderer;
 use crate::renderer::Renderer;
-use crate::util::{add_https_to_url, write_string_to_file, FooterText};
+use crate::util::write_string_to_file;
 use std::path::PathBuf;
 
 #[derive(Default)]
@@ -46,15 +46,6 @@ impl Renderer<Resume, String> for GitHubRenderer {
         if let Some(e) = &element.technologies {
             text = format!("{}\n\n{}", text, self.render(e, config)?);
         }
-
-        let footer_text = FooterText::new();
-        text = format!(
-            "{}\n\n---\n\n{} [{}]({})\n",
-            text,
-            footer_text.prefix,
-            footer_text.url,
-            add_https_to_url(&footer_text.url)
-        );
 
         Ok(text)
     }

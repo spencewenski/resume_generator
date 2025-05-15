@@ -6,7 +6,6 @@ use crate::data::{
 use crate::renderer::Renderer;
 use crate::util::{
     add_https_to_url, split_string_across_lines, time_range_string, write_string_to_file,
-    FooterText,
 };
 use std::path::PathBuf;
 
@@ -57,15 +56,6 @@ impl Renderer<Resume, String> for MarkdownRenderer {
         if let Some(e) = &element.education {
             text = format!("{}\n\n{}", text, self.render(e, config)?);
         }
-
-        let footer_text = FooterText::new();
-        text = format!(
-            "{}\n\n---\n\n{} [{}]({})\n",
-            text,
-            footer_text.prefix,
-            footer_text.url,
-            add_https_to_url(&footer_text.url)
-        );
 
         Ok(text)
     }

@@ -6,7 +6,7 @@ use crate::data::{
 use crate::renderer::Renderer;
 use crate::util::{
     cover_letter_file_name, date_string, split_string_across_lines, time_range_string,
-    write_string_to_file, FooterText,
+    write_string_to_file,
 };
 use std::path::PathBuf;
 
@@ -68,11 +68,6 @@ impl Renderer<Resume, String> for TextRenderer {
         if let Some(e) = &element.education {
             text = format!("{}\n\n{}", text, self.render(e, config)?);
         }
-        let footer = centered_string(
-            &FooterText::new().basic_text,
-            config.format_config.text_config.width,
-        );
-        text = format!("{}\n\n{}", text, footer);
         Ok(text)
     }
 }
@@ -470,7 +465,7 @@ positionB                            startB - endB
             closing: String::from("From,"),
             paragraphs: vec!["foo", "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut", "baz"]
                 .into_iter()
-                .map(|x| String::from(x))
+                .map(String::from)
                 .collect(),
             name: Some(String::from("Foo Bar")),
             email: Some(String::from("foo@bar.com")),
