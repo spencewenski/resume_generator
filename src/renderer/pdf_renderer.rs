@@ -94,7 +94,7 @@ impl Renderer<CoverLetter, String> for PdfRenderer {
 
 impl Renderer<Resume, Document> for PdfRenderer {
     fn render(&self, element: &Resume, config: &Config) -> Result<Document, String> {
-        let mut doc = document_preamble(config, true);
+        let mut doc = document_preamble(config, false);
 
         // Name
         doc.push(Element::Environment(
