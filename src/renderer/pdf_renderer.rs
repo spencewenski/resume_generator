@@ -354,10 +354,10 @@ fn document_preamble(config: &Config) -> Document {
             package: String::from("geometry"),
             argument: Some(format!("margin={}", config.format_config.pdf_config.margin)),
         })
-        // Set up the font encoding
+        // Set up the font
         .push(PreambleElement::UsePackage {
-            package: String::from("fontenc"),
-            argument: Some(String::from("T1")),
+            package: String::from("times"),
+            argument: None,
         })
         // Set up the footer and remove the header
         .use_package("fancyhdr")
