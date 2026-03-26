@@ -591,7 +591,7 @@ mod test {
         let rendered = PdfRenderer::new().render(&x, &get_config()).unwrap();
         let rendered = print(&rendered).unwrap();
 
-        let expected_prefix = "\\documentclass{article}\n\\usepackage[margin=0.75in]{geometry}\n\\usepackage[T1]{fontenc}\n\\usepackage{fancyhdr}\n\\usepackage{hyperref}\n\\fancyhf{}\n\\pagestyle{fancy}\n\\renewcommand{\\headrulewidth}{0pt}\n\\begin{document}\n\\setlength\\parindent{0pt}\nFoo Bar\n\nfoo@bar.com\n\n";
+        let expected_prefix = "\\documentclass{article}\n\\usepackage[margin=0.75in]{geometry}\n\\usepackage{times}\n\\usepackage{fancyhdr}\n\\usepackage{hyperref}\n\\fancyhf{}\n\\pagestyle{fancy}\n\\renewcommand{\\headrulewidth}{0pt}\n\\begin{document}\n\\setlength\\parindent{0pt}\nFoo Bar\n\nfoo@bar.com\n\n";
         let expected_suffix = "\n\n\\setlength\\parskip{2em}\nHello,\n\n\\setlength\\parskip{1em}\nfoo\n\nbar\n\nbaz\n\n\\setlength\\parskip{2em}\nFrom,\n\n\\setlength\\parskip{0em}\nFoo Bar\n\n\\end{document}\n";
         let expected = format!("{}{}{}", expected_prefix, date_string(), expected_suffix);
         assert_eq!(rendered, expected);
